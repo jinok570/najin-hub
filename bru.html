@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>브루 관제실 v4</title>
+<style>
+:root{--bg:#0a1628;--card:#0f1f38;--card2:#132747;--line:#1e3a5f;--tx:#e8eef7;--dim:#8fa3bd;--gold:#d4a94e;--gold2:#e8c883;--ok:#3dd68c;--bad:#ff6b6b;--wa:#ffb454;--info:#5aa7ff}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--tx);font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;min-height:100vh;padding-bottom:40px}
+.wrap{max-width:680px;margin:0 auto;padding:16px}
+header{display:flex;align-items:center;gap:10px;padding:14px 4px}
+header .logo{font-size:22px}
+header b{font-size:18px;color:var(--gold2);letter-spacing:.5px}
+header .sp{flex:1}
+.iconbtn{background:var(--card);border:1px solid var(--line);color:var(--tx);border-radius:12px;width:42px;height:42px;font-size:18px;cursor:pointer}
+.screen{display:none}.screen.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.card h3{font-size:14px;color:var(--gold2);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.card h3 .num{background:var(--gold);color:#0a1628;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800}
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;background:var(--card2);border:1px solid var(--line);color:var(--tx);border-radius:12px;padding:13px 14px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;transition:.15s}
+.btn:active{transform:scale(.98)}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#0a1628}
+.btn.good{background:#14432e;border-color:#1e6b47;color:var(--ok)}
+.btn.ghost{background:transparent}
+.btn.wide{width:100%}
+.btn.copied{background:#14432e;border-color:#1e6b47;color:var(--ok)}
+.btn:disabled{opacity:.4;cursor:default}
+.row{display:flex;gap:8px}
+.row .btn{flex:1}
+.field{margin:10px 0}
+.field label{display:block;font-size:12px;color:var(--dim);margin-bottom:6px}
+.field input{width:100%;background:#0a1830;border:1px solid var(--line);border-radius:10px;color:var(--tx);padding:12px;font-size:14px}
+.field input:focus{outline:none;border-color:var(--gold)}
+.hint{font-size:12px;color:var(--dim);line-height:1.6}
+.eye{margin-top:8px;font-size:13px}
+.pv{margin-top:8px;border:1px solid var(--line);border-radius:12px;background:#0a1830;overflow:hidden;display:none}
+.pv.on{display:block}
+.pvh{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line);font-size:12px;color:var(--dim);font-weight:700}
+.pvh .sp{flex:1}
+.pvtab{background:transparent;border:1px solid var(--line);color:var(--dim);border-radius:8px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer}
+.pvtab.on{background:var(--gold);border-color:var(--gold);color:#0a1628}
+.pvb{padding:12px;font-size:13.5px;line-height:1.9;white-space:pre-wrap;word-break:break-word;max-height:42vh;overflow-y:auto}
+.pvb.ko{color:var(--gold2)}
+.pvb.empty{color:var(--dim);font-style:italic}
+.note{background:var(--card2);border-left:3px solid var(--info);border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.7;margin-bottom:12px}
+.cnt{font-size:12px;color:var(--dim);font-weight:400}
+.fname{background:#0a1830;border:1px dashed var(--gold);border-radius:10px;padding:11px 12px;font-size:13px;font-weight:700;color:var(--gold2);word-break:break-all;margin-bottom:10px;font-family:monospace}
+.boxlist{max-height:44vh;overflow-y:auto;border:1px solid var(--line);border-radius:12px;background:#0a1830}
+.boxlist.short{max-height:26vh}
+.item{display:flex;align-items:center;gap:10px;padding:12px;border-bottom:1px solid var(--line);cursor:pointer;transition:.15s}
+.item:last-child{border-bottom:none}
+.item.sel{background:#1c3356}
+.item .ck{width:22px;height:22px;border:2px solid var(--line);border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:#0a1628}
+.item.sel .ck{background:var(--gold);border-color:var(--gold)}
+.item .bd{flex:1;min-width:0}
+.item .tt{font-size:13px;font-weight:700;line-height:1.45;margin-bottom:4px}
+.item .meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.st{font-size:11px;font-weight:800;border-radius:6px;padding:3px 8px}
+.st.검토중{background:#3d3517;color:#ffd54a}.st.수정요청{background:#3d2a17;color:#ffab5e}
+.st.제작대기{background:#3d1730;color:#ff8ec9}.st.제작중{background:#17293d;color:#5aa7ff}
+.st.승인{background:#14432e;color:#3dd68c}.st.완료{background:#2a1a3d;color:#c39aff}.st.취소{background:#3d1717;color:#ff6b6b}
+.tag{font-size:11px;color:var(--dim)}
+.ytlink{font-size:12px;color:var(--info);text-decoration:none;margin-top:4px;display:inline-block}
+.jobhead{background:linear-gradient(135deg,#132747,#0f1f38);border:1px solid var(--gold);border-radius:16px;padding:16px;margin-bottom:14px}
+.jobhead .no{font-size:12px;color:var(--gold2);font-weight:800;margin-bottom:4px}
+.jobhead .tt{font-size:16px;font-weight:800;line-height:1.5}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--dim);font-size:14px;cursor:pointer;padding:6px 0;margin-bottom:8px;background:none;border:none}
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(80px);background:#1c3356;color:var(--tx);border:1px solid var(--line);border-radius:12px;padding:12px 20px;font-size:14px;font-weight:700;opacity:0;transition:.25s;z-index:99;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.ok{border-color:#1e6b47;color:var(--ok)}.toast.er{border-color:#7a2e2e;color:var(--bad)}.toast.wa{border-color:#7a5c2e;color:var(--wa)}
+.mask{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;background:rgba(0,0,0,.65);display:none;z-index:50;overflow-y:auto}
+.mask.open{display:block}
+.sheet{position:relative;background:var(--card);border:1px solid var(--gold);border-radius:20px;width:calc(100% - 32px);max-width:520px;margin:60px auto 40px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.sheet h2{font-size:16px;color:var(--gold2);margin-bottom:14px}
+.check{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.check:last-of-type{border-bottom:none}
+.check .box{width:22px;height:22px;border:2px solid var(--line);border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--ok);margin-top:1px}
+.check.on .box{background:#14432e;border-color:#1e6b47}
+.check .cb{font-size:14px;font-weight:700}.check .cs{font-size:12px;color:var(--dim);margin-top:2px}
+.empty{text-align:center;color:var(--dim);font-size:13px;padding:40px 0;line-height:1.8}
+.spin{display:inline-block;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.donebox{text-align:center;padding:30px 10px}
+.donebox .big{font-size:44px;margin-bottom:12px}
+.donebox b{font-size:17px;color:var(--gold2)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <span class="logo">🎬</span><b>브루 관제실</b>
+  <span class="sp"></span>
+  <button class="iconbtn" id="btnRefresh" title="새로고침">🔄</button>
+  <button class="iconbtn" id="btnCfg" title="설정">⚙️</button>
+</header>
+
+<!-- ══════ 화면 1 · 노션 목록 (2박스) ══════ -->
+<div class="screen on" id="scrList">
+  <div class="card">
+    <h3>🎬 새로 제작할 영상 <span class="cnt" id="cntMake"></span></h3>
+    <div class="boxlist" id="listMake"><div class="empty">🔄 버튼을 눌러 목록을 불러오세요.</div></div>
+    <div style="height:10px"></div>
+    <button class="btn gold wide" id="btnGo">▶ 제작하러 가기</button>
+  </div>
+  <div class="card">
+    <h3>📤 유튜브 업로드 완료 <span class="cnt" id="cntDone"></span></h3>
+    <div class="boxlist short" id="listDone"><div class="empty">아직 없어요.</div></div>
+  </div>
+</div>
+
+<!-- ══════ 화면 2 · 제작 ══════ -->
+<div class="screen" id="scrMake">
+  <button class="back" id="backToList">← 목록으로</button>
+  <div class="jobhead"><div class="no" id="jNo"></div><div class="tt" id="jTitle"></div></div>
+
+  <div class="card">
+    <h3><span class="num">1</span>본편 영상 — 브루</h3>
+    <div class="row">
+      <button class="btn" id="cpScript">📋 대본 복사</button>
+      <a class="btn ghost" href="https://vrew.ai/ko/" target="_blank">🎬 브루 열기</a>
+    </div>
+    <button class="btn ghost wide eye" data-pv="pvScript" data-label="👁 대본 보기">👁 대본 보기</button>
+    <div class="pv" id="pvScript">
+      <div class="pvh"><span>브루용 대본</span><span class="sp"></span><span id="pvScriptCnt"></span></div>
+      <div class="pvb" id="pvScriptBody"></div>
+    </div>
+    <div class="hint" style="margin-top:8px">브루 → 새 프로젝트 → "텍스트로 비디오 만들기"에 붙여넣기</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">2</span>훅 10초 영상 — OpenArt</h3>
+    <div class="row">
+      <button class="btn" id="cpHook">📋 훅 프롬프트 복사</button>
+      <a class="btn ghost" href="https://openart.ai" target="_blank">🎨 OpenArt 열기</a>
+    </div>
+    <button class="btn ghost wide eye" data-pv="pvHook" data-label="👁 훅 프롬프트 보기">👁 훅 프롬프트 보기</button>
+    <div class="pv" id="pvHook">
+      <div class="pvh"><span>훅 프롬프트</span><span class="sp"></span>
+        <button class="pvtab on" data-tg="pvHook" data-m="en">원문</button>
+        <button class="pvtab" data-tg="pvHook" data-m="ko">한글</button></div>
+      <div class="pvb" id="pvHookBody"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">3</span>썸네일 배경 — OpenArt</h3>
+    <button class="btn wide" id="cpThumbBg">📋 배경 이미지 프롬프트 복사 (16:9 · 글자 없음)</button>
+    <button class="btn ghost wide eye" data-pv="pvThumbBg" data-label="👁 배경 프롬프트 보기">👁 배경 프롬프트 보기</button>
+    <div class="pv" id="pvThumbBg">
+      <div class="pvh"><span>썸네일 배경 프롬프트</span><span class="sp"></span>
+        <button class="pvtab on" data-tg="pvThumbBg" data-m="en">원문</button>
+        <button class="pvtab" data-tg="pvThumbBg" data-m="ko">한글</button></div>
+      <div class="pvb" id="pvThumbBgBody"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">4</span>썸네일 완성 — 미리캔버스</h3>
+    <div class="row">
+      <button class="btn" id="cpThumbTxt">📋 문구 3안 복사</button>
+      <a class="btn ghost" id="lnkCanva" href="https://www.miricanvas.com/ko/workspace/drive" target="_blank">🧩 미리캔버스 열기</a>
+    </div>
+    <button class="btn ghost wide eye" data-pv="pvThumbTxt" data-label="👁 문구 3안 보기">👁 문구 3안 보기</button>
+    <div class="pv" id="pvThumbTxt">
+      <div class="pvh"><span>썸네일 문구 3안</span><span class="sp"></span></div>
+      <div class="pvb" id="pvThumbTxtBody"></div>
+    </div>
+    <div class="hint" style="margin-top:8px">배경 위에 문구만 얹기 · 1280×720 · 글자 크게(시니어 타겟)</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">5</span>저장 — Drive 업로드 (분류 자동화)</h3>
+    <div class="note" style="border-left-color:var(--gold)">브루에서 내보낼 때 아래 <b>파일명을 그대로</b> 쓰고 <b>완성본 폴더</b>에 저장하면, 날짜·번호 순으로 자동 정렬됩니다.</div>
+    <div class="fname" id="fName"></div>
+    <div class="row">
+      <button class="btn" id="cpFile">📋 파일명 복사</button>
+      <button class="btn ghost" id="btnDrive">📂 완성본 폴더 열기</button>
+    </div>
+    <div class="field" style="margin-top:10px"><label for="fDrive">완성본 폴더 링크 (여기에 붙여넣으면 저장됨)</label>
+      <input type="text" id="fDrive" placeholder="https://drive.google.com/drive/folders/... 붙여넣기"></div>
+    <div class="field"><label for="fVideo">업로드한 영상 파일 링크 (Drive에서 링크 복사)</label>
+      <input type="url" id="fVideo" placeholder="https://drive.google.com/..."></div>
+  </div>
+
+  <button class="btn good wide" id="goUpload">✅ 제작 끝 — 유튜브 업로드 하러 가기</button>
+</div>
+
+<!-- ══════ 화면 3 · 업로드 & 완료 기록 ══════ -->
+<div class="screen" id="scrUpload">
+  <button class="back" id="backToMake">← 제작으로</button>
+  <div class="jobhead"><div class="no" id="uNo"></div><div class="tt" id="uTitle"></div></div>
+
+  <div class="card">
+    <h3>📤 유튜브 스튜디오 체크리스트</h3>
+    <div id="upChecks"></div>
+  </div>
+
+  <div class="card">
+    <h3>🔗 업로드한 유튜브 주소</h3>
+    <div class="field"><input type="url" id="fYt" placeholder="https://youtu.be/... 또는 https://www.youtube.com/watch?v=..."></div>
+    <div class="hint">저장하면 노션 대본 관리에 상태 「완료」 + 유튜브 주소가 자동 기록됩니다.</div>
+  </div>
+
+  <button class="btn gold wide" id="btnDone">🏁 완료 저장 — 노션에 기록</button>
+</div>
+
+<!-- ══════ 완료 화면 ══════ -->
+<div class="screen" id="scrDone">
+  <div class="donebox">
+    <div class="big">🎉</div>
+    <b>노션에 기록 완료!</b>
+    <div class="hint" style="margin-top:10px">목록에서 날짜별 제작 기록을 확인할 수 있어요.</div>
+    <div style="height:20px"></div>
+    <button class="btn gold wide" id="doneToList">📚 목록으로 돌아가기</button>
+  </div>
+</div>
+</div>
+
+<!-- 설정 -->
+<div class="mask" id="cfgMask">
+  <div class="sheet">
+    <h2>⚙️ 설정</h2>
+    <div class="field"><label for="cBase">n8n 주소</label>
+      <input type="url" id="cBase" placeholder="https://n8n.example.com"></div>
+    <div class="field"><label for="cDrive">완성영상 폴더 (PC 경로 또는 웹 링크)</label>
+      <input type="text" id="cDrive" placeholder="C:\Users\...\완성본  또는  https://..."></div>
+    <div class="field"><label for="cCanva">미리캔버스 링크</label>
+      <input type="url" id="cCanva" placeholder="https://www.miricanvas.com/ko/workspace/drive"></div>
+    <div style="height:8px"></div>
+    <button class="btn gold wide" id="cfgSave">저장</button>
+    <div style="height:8px"></div>
+    <button class="btn ghost wide" id="cfgClose">닫기</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════ 상태 ═══════════ */
+let cfg={base:'',drive:'',canva:'https://www.miricanvas.com/ko/workspace/drive',fetchPath:'vrew-fetch',listPath:'vrew-list',statusPath:'vrew-status'};
+let job=null, items=[];
+const UP_CHECK=[
+  ['제목 입력','대체 제목안 중 반응 좋을 것으로'],
+  ['설명란 작성','핵심 요약 + 출처 기관 + 타임스탬프'],
+  ['태그 10개 내외','기초연금, 시니어 재테크 등'],
+  ['썸네일 업로드','미리캔버스에서 만든 파일'],
+  ['공개 설정','화·금 오전 예약 발행 추천']
+];
+const $=id=>document.getElementById(id);
+const esc=s=>(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function newJob(){return{pageId:'',no:'',title:'',script:'',hookP:'',thumbP:'',thumbTxt:'',videoUrl:'',ytUrl:'',checks:[]}}
+function save(){try{localStorage.setItem('nea4:cfg',JSON.stringify(cfg));localStorage.setItem('nea4:job',JSON.stringify(job))}catch(e){}}
+function load(){
+  try{const v=localStorage.getItem('nea4:cfg');if(v)cfg=Object.assign(cfg,JSON.parse(v))}catch(e){}
+  if(!cfg.canva||cfg.canva==='https://www.miricanvas.com'||cfg.canva==='https://www.miricanvas.com/')cfg.canva='https://www.miricanvas.com/ko/workspace/drive';
+  try{const v=localStorage.getItem('nea4:job');if(v)job=JSON.parse(v)}catch(e){}
+  if(!job)job=newJob();
+}
+let toastT=null;
+function toast(m,k){const el=$('toast');el.textContent=m;el.className='toast show '+(k||'');
+  if(toastT)clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),k==='er'?3200:2200)}
+
+/* ═══════════ 복사 (https + file:// 폴백) ═══════════ */
+async function copyText(t,label,btn){
+  let ok=false;
+  try{await navigator.clipboard.writeText(t);ok=true}
+  catch(e){
+    try{const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');document.body.removeChild(ta)}catch(e2){}
+  }
+  if(ok){toast(label+' 복사 완료','ok');
+    if(btn){const t0=btn.textContent;btn.classList.add('copied');btn.textContent='✓ 복사됨';
+      setTimeout(()=>{btn.classList.remove('copied');btn.textContent=t0},1800)}}
+  else toast('복사 실패 — 길게 눌러 직접 복사하세요','er');
+}
+
+/* ═══════════ 노션 본문 → 브루용 대본 정리 ═══════════ */
+function extractScriptSection(md){
+  const lines=(md||'').split(/\r?\n/);let start=-1,end=lines.length;
+  for(let i=0;i<lines.length;i++){
+    if(start===-1&&/^#{1,3}\s*🎬?\s*대본\s*$/.test(lines[i].trim())){start=i+1;continue}
+    if(start!==-1&&/^#\s+\S/.test(lines[i])){end=i;break}
+  }
+  if(start===-1)return md||'';
+  return lines.slice(start,end).join('\n');
+}
+function cleanForVrew(text){
+  const section=extractScriptSection(text);
+  const out=[];
+  for(let line of section.split(/\r?\n/)){
+    let t=line.trim();if(!t)continue;
+    if(/^-{3,}$/.test(t))continue;
+    if(/^#{1,6}\s/.test(t))continue;
+    t=t.replace(/\*\*(.*?)\*\*/g,'$1').replace(/\*(.*?)\*/g,'$1').trim();
+    if(!t)continue;
+    if(/^\[[^\]]*(화면|장면|자막|효과|BGM)[^\]]*\]/.test(t))continue;
+    if(/^<\/?table|^<tr>|^<td>|^<\/tr>|^<\/td>/i.test(t))continue;
+    if(/^\d+\.\s*\*\*/.test(t))t=t.replace(/^\d+\.\s*/,'');
+    out.push(t);
+  }
+  let joined=out.join(' ');
+  const PH='';
+  joined=joined.replace(/(\d)\.(\d)/g,'$1'+PH+'$2');
+  return joined.split(/(?<=[.?!])\s+/).map(s=>s.trim().split(PH).join('.')).filter(Boolean).join('\n');
+}
+
+/* ═══════════ n8n 통신 ═══════════ */
+function whUrl(path){return cfg.base.replace(/\/$/,'')+'/webhook/'+path}
+async function apiList(){
+  const res=await fetch(whUrl(cfg.listPath),{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+  const data=await res.json();return Array.isArray(data)?data:(data.items||[]);
+}
+async function apiFetch(pageId){
+  const res=await fetch(whUrl(cfg.fetchPath),{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(pageId?{pageId}:{})});
+  return res.json();
+}
+async function apiStatus(status,extra){
+  if(!job.pageId)return;
+  try{await fetch(whUrl(cfg.statusPath),{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(Object.assign({pageId:job.pageId,status},extra||{}))});
+    toast('노션 상태 → 「'+status+'」 반영','ok');
+  }catch(e){toast('노션 반영 실패 — 나중에 직접 확인하세요','er')}
+}
+
+/* ═══════════ 화면 전환 ═══════════ */
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');window.scrollTo(0,0)}
+
+/* ═══════════ 화면 1 · 목록 (2박스) ═══════════ */
+let selId='';
+function sortByDateDesc(a,b){return ((b.date||'')+'').localeCompare((a.date||'')+'')}
+function renderList(){
+  const make=items.filter(it=>!['완료','취소'].includes(it.status||'')).sort(sortByDateDesc);
+  const done=items.filter(it=>(it.status||'')==='완료').sort(sortByDateDesc);
+  $('cntMake').textContent=make.length?'('+make.length+'건)':'';
+  $('cntDone').textContent=done.length?'('+done.length+'건)':'';
+  // 선택 유지: 목록에 없으면 첫 제작대기 자동 선택
+  if(!make.find(it=>it.pageId===selId)){
+    const first=make.find(it=>(it.status||'')==='제작대기')||make[0];
+    selId=first?first.pageId:'';
+  }
+  const boxM=$('listMake');
+  if(!make.length){boxM.innerHTML='<div class="empty">'+(items.length?'제작할 영상이 없어요.':'🔄 버튼을 눌러 목록을 불러오세요.')+'</div>'}
+  else boxM.innerHTML=make.map(it=>`
+    <div class="item ${it.pageId===selId?'sel':''}" data-id="${esc(it.pageId||'')}">
+      <div class="ck">${it.pageId===selId?'✓':''}</div>
+      <div class="bd">
+        <div class="tt">${esc(it.title||'(제목 없음)')}</div>
+        <div class="meta">
+          <span class="st ${esc(it.status||'')}">${esc(it.status||'-')}</span>
+          <span class="tag">#${esc(String(it.no==null?'-':it.no))}</span>
+          <span class="tag">· ${esc((it.date||'').slice(0,10))}</span>
+        </div>
+      </div>
+    </div>`).join('');
+  boxM.querySelectorAll('.item').forEach(el=>el.onclick=()=>{selId=el.dataset.id;renderList()});
+  const boxD=$('listDone');
+  if(!done.length){boxD.innerHTML='<div class="empty">아직 없어요.</div>'}
+  else boxD.innerHTML=done.map(it=>`
+    <div class="item" data-yt="${esc(it.yt||'')}">
+      <div class="bd">
+        <div class="tt">${esc(it.title||'(제목 없음)')}</div>
+        <div class="meta">
+          <span class="tag">📅 ${esc((it.date||'').slice(0,10))}</span>
+          <span class="tag">#${esc(String(it.no==null?'-':it.no))}</span>
+          ${it.yt?'<span class="tag" style="color:var(--info)">▶ 유튜브 보기</span>':''}
+        </div>
+      </div>
+    </div>`).join('');
+  boxD.querySelectorAll('.item').forEach(el=>{
+    el.onclick=()=>{if(el.dataset.yt)window.open(el.dataset.yt,'_blank')}});
+}
+async function refreshList(){
+  if(!cfg.base){toast('설정에서 n8n 주소를 먼저 입력하세요','wa');openCfg();return}
+  $('btnRefresh').innerHTML='<span class="spin">🔄</span>';
+  try{items=await apiList();renderList();toast('목록 불러오기 완료 ('+items.length+'건)','ok')}
+  catch(e){toast('목록 불러오기 실패 — n8n 확인','er')}
+  $('btnRefresh').innerHTML='🔄';
+}
+async function startJob(pageId){
+  if(!cfg.base){toast('설정에서 n8n 주소를 먼저 입력하세요','wa');openCfg();return}
+  toast(pageId?'대본 불러오는 중…':'최신 제작대기 확인 중…');
+  try{
+    const data=await apiFetch(pageId);
+    if(!data.found){toast(pageId?'해당 대본을 찾지 못했어요':'제작대기 상태인 대본이 없어요','wa');return}
+    job=newJob();
+    job.pageId=data.pageId||pageId||'';
+    job.no=String(data.no||'');job.title=data.title||'';
+    job.script=cleanForVrew((data.script||data.rawBody||'').trim());
+    job.hookP=data.hookP||'';job.thumbP=data.thumbP||'';job.thumbTxt=data.thumbTxt||'';
+    save();renderMake();show('scrMake');
+    apiStatus('제작중');
+  }catch(e){toast('가져오기 실패 — n8n 연결 확인','er')}
+}
+
+/* ═══════════ 화면 2 · 제작 ═══════════ */
+function fileName(){
+  const d=new Date();
+  const ymd=String(d.getFullYear()).slice(2)+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+  const ep='EP'+String(job.no||'0').padStart(2,'0');
+  const kw=(job.title||'제목').replace(/\\?\[[^\]]*\]/g,'').replace(/[\\/:*?"<>|.,'"—-]+/g,' ')
+    .trim().split(/\s+/).slice(0,3).join('').slice(0,12)||'영상';
+  return ymd+'_'+ep+'_v1_'+kw+'.mp4';
+}
+/* ═══════════ 프롬프트 한글 풀이 (용어 자동 변환) ═══════════ */
+const KO_TERMS=[
+  ['single continuous slow push-in shot','컷 없이 천천히 다가가는 한 컷'],
+  ['single continuous shot','컷 없는 한 컷'],
+  ['slow push-in','천천히 다가가는 카메라'],
+  ['warm friendly Korean older-sister persona','따뜻하고 친근한 한국 언니 느낌'],
+  ['warm afternoon window light','따뜻한 오후 창가 햇살'],
+  ['soft documentary realism','부드러운 다큐 느낌의 실사'],
+  ['shallow depth of field','배경 흐림(아웃포커스)'],
+  ['government pension statement letter','국민연금 안내문'],
+  ['pension statement','연금 안내문'],
+  ['health checkup result','건강검진 결과지'],
+  ['hospital bill','병원 영수증'],
+  ['bank book','통장'],
+  ['no readable text','읽히는 글자 없음'],
+  ['blurred abstract lines','흐릿한 추상적인 줄무늬'],
+  ['out-of-focus document layout','초점 나간 문서 형태'],
+  ['lively energetic reaction','생기 있고 에너지 넘치는 리액션'],
+  ['big joyful reaction','크게 기뻐하는 리액션'],
+  ['hands raised in delight','기뻐서 손을 든'],
+  ['genuine excitement','진짜 신난'],
+  ['bright delighted grin','환하게 기뻐하는 미소'],
+  ['reassuring smile','안심시키는 미소'],
+  ['eyes suddenly widen','눈이 갑자기 커지고'],
+  ['eyebrows lifting in surprise','놀라서 눈썹이 올라가고'],
+  ['leaning closer to the paper','종이 쪽으로 몸을 기울이고'],
+  ['looks up at the camera','카메라를 올려다보며'],
+  ['toward camera','카메라 쪽으로'],
+  ['sitting at a table','식탁에 앉아'],
+  ['looking down at','내려다보며'],
+  ['disappointed','실망한'],['resigned','체념한'],['shoulders slightly dropped','어깨가 살짝 처진'],
+  ['mild concern','약간의 걱정'],['spots one line','한 줄을 발견하고'],
+  ['laughing','웃으며'],['grin','활짝 웃음'],['smile','미소'],['surprise','놀람'],
+  ['cinematic','영화 같은'],['close-up','클로즈업'],['portrait','인물 사진'],
+  ['medium shot','상반신 샷'],['wide shot','전신·풍경 샷'],['no cuts','컷 전환 없음'],
+  ['16:9','가로 16:9'],['9:16','세로 9:16'],['1280x720','1280×720'],
+  ['photorealistic','실사처럼'],['high detail','디테일 높게'],['soft lighting','부드러운 조명'],
+  ['golden hour','노을빛'],['natural light','자연광'],['blurred background','흐린 배경'],
+  ['copy space','글자 넣을 빈 공간'],['negative space','여백'],['no text','글자 없음'],
+  ['korean','한국'],['woman','여성'],['elderly','노년'],['senior','시니어'],
+  ['living room','거실'],['kitchen','주방'],['bright','밝은'],['warm','따뜻한'],
+  ['the woman','그 여성'],['reference image','레퍼런스 사진'],['in her hand','손에 들고'],
+  ['lightly shaking','가볍게 흔들며'],['expression','표정'],['background','배경'],
+  /* 연결어 — 문장이 읽히게 */
+  ['she first reads it with a','처음엔'],['she first reads it','처음엔 읽는데'],
+  ['then her','그러다'],['finally she','마지막엔'],['and then','그다음'],
+  ['as she','하면서'],['holding a','들고 있고,'],['holding','들고'],
+  ['reads it','읽고'],['reads','읽고'],['looks up','올려다보며'],
+  ['the letter','안내문을'],['letter','안내문'],['the paper','종이'],['paper','종이'],
+  ['first','처음엔'],['then','그다음'],['finally','마지막엔'],
+  ['on the left','왼쪽에'],['on the right','오른쪽에'],['at the top','위쪽에'],['at the bottom','아래쪽에'],
+  ['of a','—'],['in a','—'],['of the','—'],['in the','—'],
+  ['with a','—'],['with','—'],['and','그리고'],
+  ['she','그녀가'],['her','그녀의'],['it','그것을']
+].sort((a,b)=>b[0].length-a[0].length);
+function esc4re(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
+function reFor(en){return new RegExp((/^\w/.test(en)?'\\b':'')+esc4re(en)+(/\w$/.test(en)?'\\b':''),'gi')}
+function koRatio(t){const k=(t.match(/[가-힣]/g)||[]).length;return t.length?k/t.length:0}
+function toKo(t){
+  if(!t)return '';
+  if(koRatio(t)>0.25)return t+'\n\n— 이미 한글로 적혀 있어요.';
+  let s=t;
+  KO_TERMS.forEach(([en,ko])=>{s=s.replace(reFor(en),ko)});
+  s=s.replace(/ {2,}/g,' ').replace(/ ([,.])/g,'$1');
+  return s+'\n\n— 자동 용어 변환이라 어색한 부분이 있을 수 있어요. 뜻 파악용으로만 보세요.';
+}
+/* ═══════════ 미리보기 ═══════════ */
+const pvMode={pvHook:'en',pvThumbBg:'en'};
+function fillPv(id,text,transl){
+  const b=$(id+'Body'); if(!b)return;
+  const t=(text||'').replace(/<br\s*\/?>/gi,'\n').trim();
+  if(!t){b.textContent='(내용이 없어요 — 노션에서 불러오지 못했거나 아직 안 적혀 있습니다)';
+    b.className='pvb empty';return}
+  const ko=transl&&pvMode[id]==='ko';
+  b.textContent=ko?toKo(t):t;
+  b.className='pvb'+(ko?' ko':'');
+}
+function renderPvs(){
+  fillPv('pvScript',job.script,false);
+  fillPv('pvHook',job.hookP,true);
+  fillPv('pvThumbBg',job.thumbP,true);
+  fillPv('pvThumbTxt',job.thumbTxt,false);
+  const n=(job.script||'').length;
+  $('pvScriptCnt').textContent=n?n.toLocaleString()+'자 · 약 '+Math.round(n/330)+'분':'';
+}
+function renderMake(){
+  $('jNo').textContent='영상 #'+(job.no||'-');
+  $('jTitle').textContent=job.title||'(제목 없음)';
+  $('fVideo').value=job.videoUrl||'';
+  $('lnkCanva').href=cfg.canva||'https://www.miricanvas.com/ko/workspace/drive';
+  $('fName').textContent=fileName();
+  renderPvs();
+}
+/* ═══════════ 화면 3 · 업로드 ═══════════ */
+function renderUpload(){
+  $('uNo').textContent='영상 #'+(job.no||'-');
+  $('uTitle').textContent=job.title||'(제목 없음)';
+  $('fYt').value=job.ytUrl||'';
+  if(!Array.isArray(job.checks)||job.checks.length!==UP_CHECK.length)job.checks=UP_CHECK.map(()=>false);
+  $('upChecks').innerHTML=UP_CHECK.map((c,i)=>`
+    <div class="check ${job.checks[i]?'on':''}" data-i="${i}">
+      <div class="box">${job.checks[i]?'✓':''}</div>
+      <div><div class="cb">${c[0]}</div><div class="cs">${c[1]}</div></div>
+    </div>`).join('');
+  $('upChecks').querySelectorAll('.check').forEach(el=>el.onclick=()=>{
+    const i=+el.dataset.i;job.checks[i]=!job.checks[i];save();renderUpload()});
+}
+
+/* ═══════════ 설정 ═══════════ */
+function openCfg(){$('cBase').value=cfg.base;$('cDrive').value=cfg.drive;$('cCanva').value=cfg.canva;$('cfgMask').classList.add('open')}
+function closeCfg(){$('cfgMask').classList.remove('open')}
+
+/* ═══════════ 이벤트 ═══════════ */
+window.addEventListener('DOMContentLoaded',()=>{
+  load();
+  if(job&&job.pageId&&job.title){renderMake()} // 진행 중이던 작업 유지 (목록에서 이어가기 가능)
+  if(cfg.base)refreshList(); // 주소가 저장돼 있으면 자동으로 목록 불러오기
+  $('btnRefresh').onclick=refreshList;
+  $('btnCfg').onclick=openCfg;
+  $('cfgClose').onclick=closeCfg;
+  $('cfgMask').onclick=e=>{if(e.target===$('cfgMask'))closeCfg()};
+  $('cfgSave').onclick=()=>{cfg.base=$('cBase').value.trim();cfg.drive=$('cDrive').value.trim();$('fDrive').value=cfg.drive;
+    cfg.canva=$('cCanva').value.trim()||'https://www.miricanvas.com/ko/workspace/drive';save();closeCfg();toast('설정 저장 완료','ok')};
+  $('btnGo').onclick=()=>{
+    if(!selId){toast('제작할 영상을 먼저 선택하세요','wa');return}
+    startJob(selId);
+  };
+  $('backToList').onclick=()=>{show('scrList');if(cfg.base)refreshList()};
+  $('backToMake').onclick=()=>{renderMake();show('scrMake')};
+  $('doneToList').onclick=()=>{show('scrList');refreshList()};
+
+  document.querySelectorAll('.eye').forEach(b=>{b.onclick=()=>{
+    const el=$(b.dataset.pv);const on=el.classList.toggle('on');
+    b.textContent=on?'🙈 접기':b.dataset.label;
+    if(on)el.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }});
+  document.querySelectorAll('.pvtab').forEach(b=>{b.onclick=()=>{
+    const id=b.dataset.tg;pvMode[id]=b.dataset.m;
+    document.querySelectorAll('.pvtab[data-tg="'+id+'"]').forEach(x=>x.classList.toggle('on',x===b));
+    renderPvs();
+  }});
+
+  $('cpScript').onclick=e=>{if(!job.script){toast('대본이 없어요','wa');return}copyText(job.script,'브루용 대본',e.target)};
+  $('cpHook').onclick=e=>{if(!job.hookP){toast('훅 프롬프트가 없어요','wa');return}copyText(job.hookP,'훅 프롬프트',e.target)};
+  $('cpThumbBg').onclick=e=>{if(!job.thumbP){toast('배경 프롬프트가 없어요','wa');return}copyText(job.thumbP,'썸네일 배경 프롬프트',e.target)};
+  $('cpThumbTxt').onclick=e=>{if(!job.thumbTxt){toast('썸네일 문구가 없어요','wa');return}copyText(job.thumbTxt.replace(/<br\s*\/?>/gi,'\n'),'썸네일 문구 3안',e.target)};
+  $('cpFile').onclick=e=>copyText(fileName(),'파일명',e.target);
+  $('fDrive').value=cfg.drive||'';
+  $('fDrive').addEventListener('input',e=>{cfg.drive=e.target.value.trim();save()});
+  $('btnDrive').onclick=e=>{
+    const p=(cfg.drive||'').trim();
+    if(!p){toast('아래 칸에 폴더 링크를 붙여넣으세요','wa');$('fDrive').focus();return}
+    if(/^https?:\/\//i.test(p)){window.open(p,'_blank');return}
+    copyText(p,'폴더 경로',e.target); /* 웹링크가 아니면 경로만 복사 */
+  };
+
+  $('fVideo').addEventListener('input',e=>{job.videoUrl=e.target.value.trim();save()});
+  $('fYt').addEventListener('input',e=>{job.ytUrl=e.target.value.trim();save()});
+
+  $('goUpload').onclick=()=>{
+    if(!job.videoUrl){toast('완성 영상 링크를 먼저 입력하세요','wa');$('fVideo').focus();return}
+    apiStatus('승인',{videoUrl:job.videoUrl});
+    renderUpload();show('scrUpload');
+  };
+  $('btnDone').onclick=async()=>{
+    if(!job.ytUrl){toast('유튜브 주소를 입력하세요','wa');$('fYt').focus();return}
+    if(!/^https?:\/\//.test(job.ytUrl)){toast('올바른 주소 형식이 아니에요 (https://...)','wa');return}
+    $('btnDone').disabled=true;$('btnDone').textContent='저장 중…';
+    await apiStatus('완료',{youtubeUrl:job.ytUrl,videoUrl:job.videoUrl});
+    $('btnDone').disabled=false;$('btnDone').textContent='🏁 완료 저장 — 노션에 기록';
+    job=newJob();save();
+    show('scrDone');
+  };
+});
+</script>
+</body>
+</html>

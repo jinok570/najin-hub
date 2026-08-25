@@ -1,0 +1,20 @@
+{
+  "hosting": {
+    "target": "najinhub",
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/.*/**",
+      ".tmp.driveupload/**",
+      "**/node_modules/**",
+      "**/*.bak*",
+      "*.bat",
+      "*.md",
+      "*.zip",
+      "deploy-log.txt",
+      "firebase-debug.log",
+      "_to_delete/**"
+    ]
+  }
+}

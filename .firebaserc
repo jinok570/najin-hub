@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "studybuddy-app-22f31"
+  },
+  "targets": {
+    "studybuddy-app-22f31": {
+      "hosting": {
+        "najinhub": [
+          "najinhub-jinok"
+        ]
+      }
+    }
+  }
+}

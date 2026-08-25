@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>나진 허브</title>
+<meta name="theme-color" content="#0a0c13">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="나진 허브">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237c3aed'/%3E%3Cstop offset='1' stop-color='%2306b6d4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='24' fill='%230b0d14'/%3E%3Ccircle cx='50' cy='50' r='26' fill='none' stroke='url(%23g)' stroke-width='7'/%3E%3Ccircle cx='50' cy='50' r='7' fill='url(%23g)'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#0a0c13; --ink:#f2f4fa; --sub:#8b93a7; --line:rgba(255,255,255,.09);
+  --card:rgba(255,255,255,.045); --cardHi:rgba(255,255,255,.075);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg)}
+body{
+  color:var(--ink); min-height:100vh;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Variable","Segoe UI","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+  padding:0 15px calc(30px + env(safe-area-inset-bottom));
+  max-width:940px; margin:0 auto; position:relative; overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(760px 400px at 8% -6%, rgba(124,58,237,.30), transparent 62%),
+    radial-gradient(680px 380px at 96% 6%, rgba(6,182,212,.20), transparent 60%),
+    radial-gradient(700px 500px at 50% 104%, rgba(244,114,182,.14), transparent 62%);
+}
+
+/* ── 헤더 ── */
+header{padding:28px 4px 16px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.date{font-size:12px;color:var(--sub);font-weight:700;letter-spacing:.09em}
+.hi{font-size:25px;font-weight:800;margin-top:6px;letter-spacing:-.03em;line-height:1.15}
+.hi em{
+  font-style:normal;
+  background:linear-gradient(100deg,#a78bfa,#38bdf8 55%,#f0abfc);
+  -webkit-background-clip:text;background-clip:text;color:transparent
+}
+#editBtn{
+  border:1px solid var(--line);background:var(--card);color:var(--sub);
+  border-radius:999px;padding:9px 14px;font-size:12.5px;font-weight:700;cursor:pointer;
+  white-space:nowrap;backdrop-filter:blur(10px);transition:.15s
+}
+#editBtn:hover{color:var(--ink);background:var(--cardHi)}
+#editBtn.on{background:linear-gradient(100deg,#7c3aed,#06b6d4);color:#fff;border-color:transparent}
+
+/* ── 상단 탭 ── */
+.tabsWrap{
+  position:sticky;top:0;z-index:20;margin:0 -15px;padding:8px 15px 10px;
+  background:linear-gradient(180deg,rgba(10,12,19,.96),rgba(10,12,19,.72) 70%,transparent);
+  backdrop-filter:blur(12px)
+}
+.tabs{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:6px;
+  padding:5px;background:var(--card);border:1px solid var(--line);border-radius:18px;
+  backdrop-filter:blur(14px)
+}
+@media(min-width:660px){.tabs{display:flex;gap:7px}.tab{flex:1}}
+.tab{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  border:0;background:transparent;color:var(--sub);cursor:pointer;
+  font-family:inherit;font-size:13px;font-weight:700;letter-spacing:-.02em;
+  padding:11px 13px;border-radius:14px;white-space:nowrap;transition:.16s
+}
+.tab .e{font-size:15px;line-height:1}
+.tab:hover{color:var(--ink)}
+.tab.on{color:#fff;background:var(--gr);box-shadow:0 5px 16px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.2)}
+
+/* ── 패널 ── */
+.panelHead{
+  display:flex;align-items:baseline;gap:9px;margin:20px 5px 12px
+}
+.panelHead h2{font-size:16.5px;font-weight:800;margin:0;letter-spacing:-.03em}
+.panelHead small{font-size:11.5px;font-weight:600;color:var(--sub)}
+.panelHead .cnt{
+  margin-left:auto;font-size:11px;font-weight:700;color:var(--sub);
+  border:1px solid var(--line);border-radius:99px;padding:3px 9px
+}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+@media(min-width:660px){.grid{grid-template-columns:repeat(4,1fr)}}
+.panel{animation:fade .22s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+
+/* ── 카드 ── */
+.card{
+  position:relative;display:block;overflow:hidden;
+  background:var(--card);border:1px solid var(--line);border-radius:20px;
+  padding:15px 14px 14px;text-decoration:none;color:inherit;min-height:112px;
+  backdrop-filter:blur(14px);transition:transform .14s ease,background .14s,border-color .14s;
+}
+.card::after{
+  content:"";position:absolute;inset:0;border-radius:20px;opacity:0;transition:opacity .14s;
+  background:var(--gr);mix-blend-mode:soft-light
+}
+.card:active{transform:scale(.965)}
+@media(hover:hover){.card:hover{transform:translateY(-3px);background:var(--cardHi);border-color:rgba(255,255,255,.18)}
+.card:hover::after{opacity:.5}}
+.ic{
+  width:40px;height:40px;border-radius:13px;display:grid;place-items:center;
+  font-size:20px;margin-bottom:9px;background:var(--gr);
+  box-shadow:0 4px 14px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.22)
+}
+.tt{font-size:14.5px;font-weight:800;letter-spacing:-.02em;line-height:1.25}
+.ds{font-size:11.5px;color:var(--sub);line-height:1.4;font-weight:500;margin-top:3px}
+.arw{position:absolute;top:15px;right:14px;font-size:12px;color:var(--sub);opacity:.6}
+.card.warn{border-style:dashed;border-color:rgba(251,191,36,.55)}
+.card.warn .arw{color:#fbbf24;opacity:1}
+
+/* ── 편집 모드 ── */
+.edit .card{pointer-events:none;opacity:.9}
+.editrow{display:none;margin-top:9px}
+.edit .editrow{display:block}
+.editrow input{
+  width:100%;font-size:11px;padding:9px 10px;border-radius:11px;
+  border:1px solid var(--line);background:rgba(0,0,0,.35);color:var(--ink);font-family:inherit
+}
+.editrow input:focus{outline:none;border-color:#7c3aed}
+
+.tip{
+  font-size:12.5px;color:var(--sub);line-height:1.75;background:var(--card);
+  border:1px solid var(--line);border-radius:20px;padding:16px 17px;margin-top:26px;
+  backdrop-filter:blur(14px)
+}
+.tip b{color:var(--ink);font-weight:700}
+footer{text-align:center;font-size:11px;color:var(--sub);padding:20px 0 4px;opacity:.6}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="date" id="today">—</div>
+    <div class="hi" id="greet">안녕, <em>진옥</em> 👋</div>
+  </div>
+  <button id="editBtn">✏️ 링크수정</button>
+</header>
+
+<div class="tabsWrap"><div class="tabs" id="tabs"></div></div>
+
+<div id="app"></div>
+
+<div class="tip">
+  <b>📌 홈화면에 앱처럼 추가</b><br>
+  · 아이폰/아이패드 — 사파리 → <b>공유 → 홈 화면에 추가</b><br>
+  · 안드로이드 — 크롬 → <b>⋮ → 홈 화면에 추가</b><br>
+  · 노트북(엣지) — <b>⋯ → 앱 → 이 사이트를 앱으로 설치</b><br><br>
+  <b>🔐 로그인</b> — 이 앱은 비밀번호를 저장하지 않아. 카드를 누르면 엣지에 저장된 자동암호가 그대로 채워져.
+</div>
+
+<footer>나진 허브 v2 · 다크 · 링크는 ✏️로 언제든 수정</footer>
+
+<script>
+var G = {
+  work : "linear-gradient(135deg,#7c3aed,#4f46e5)",
+  learn: "linear-gradient(135deg,#059669,#0891b2)",
+  make : "linear-gradient(135deg,#e11d48,#f59e0b)",
+  auto : "linear-gradient(135deg,#0284c7,#06b6d4)"
+};
+
+var TABS = [
+  { id:"work", label:"유치원 업무", emo:"🏫", note:"공문 · 평가 · 문서", gr:G.work, items:[
+    { k:"eval",    ic:"🧒", t:"유아평가",     d:"교사일지 · 발달기록", u:"eval.html" },
+    { k:"inbox",   ic:"📥", t:"Drive INBOX",  d:"공문 자동 수집함",   u:"https://drive.google.com/drive/folders/1Lvr9cI1ScQS2NNr1tANhjtVq7hjBRd1C" },
+    { k:"onedrive",ic:"☁️", t:"유치원업무",   d:"OneDrive 주업무 폴더", u:"https://1drv.ms/f/c/3ca4521d08607f1e/IgAef2AIHVKkIIA82BoAAAAAAQNjjHNMcpHV4vvGj5qCnnk?e=jHglxJ" },
+    { k:"notion",  ic:"📋", t:"공문 브리핑",   d:"모바일 실시간 확인", u:"https://claude.ai/code/artifact/403127dc-51fb-4858-8d94-79190491c563" }
+  ]},
+  { id:"learn", label:"나의 배움", emo:"📚", note:"연수 · 방통대 3학년", gr:G.learn, items:[
+    { k:"jnstudy", ic:"🎓", t:"전남교육연수포털", d:"연수 신청 · 이수", u:"https://www.jnstudy.kr/" },
+    { k:"uknou",   ic:"📖", t:"U-KNOU 강의실",   d:"유아교육 3학년",  u:"https://ucampus.knou.ac.kr/ekp/user/login/retrieveULOLogin.do" },
+    { k:"knou",    ic:"🏛️", t:"방통대 본교",     d:"공지 · 학사일정", u:"https://www.knou.ac.kr/" },
+    { k:"engtalk", ic:"🎙️", t:"말하는 영어 LIVE", d:"AI 음성 대화 연습", u:"https://calm-baklava-d42225.netlify.app" }
+  ]},
+  { id:"make", label:"영상제작", emo:"🎬", note:"활찬언니 톡톡", gr:G.make, items:[
+    { k:"bru",     ic:"🎛️", t:"브루 관제실",   d:"제작 현황판",     u:"bru.html" },
+    { k:"vrew",    ic:"✂️", t:"Vrew",          d:"영상 편집",       u:"https://vrew.ai/ko/" },
+    { k:"openart", ic:"🎨", t:"OpenArt",       d:"썸네일 · 인트로", u:"https://openart.ai/" },
+    { k:"miri",    ic:"🖼️", t:"미리캔버스",     d:"디자인 편집",     u:"https://www.miricanvas.com/" }
+  ]},
+  { id:"auto", label:"자동화 모니터링", emo:"⚙️", note:"n8n · 아들 학습", gr:G.auto, items:[
+    { k:"n8n",     ic:"🔧", t:"n8n",           d:"워크플로 관제",   u:"https://n8n.auto-navajin.com" },
+    { k:"study",   ic:"⚔️", t:"아들 학습앱",   d:"고1 학습앱 · 원정대", u:"https://studybuddy-app-22f31.web.app" },
+    { k:"sheets",  ic:"📊", t:"구글 시트",     d:"데이터 · 기록",   u:"https://sheets.google.com/" },
+    { k:"cal",     ic:"📅", t:"구글 캘린더",   d:"일정 확인",       u:"https://calendar.google.com/" }
+  ]}
+];
+
+/* ── 저장 (실패해도 앱은 그대로 동작) ── */
+var MEM={};
+function ls(key,val){
+  try{
+    if(val===undefined) return localStorage.getItem(key);
+    localStorage.setItem(key,val); return val;
+  }catch(e){
+    if(val===undefined) return MEM[key]||null;
+    MEM[key]=val; return val;
+  }
+}
+var OVER = (function(){ try{ return JSON.parse(ls("najin_hub_urls")||"{}"); }catch(e){ return {}; } })();
+function saveOver(){ ls("najin_hub_urls", JSON.stringify(OVER)); }
+function urlOf(it){ return (OVER[it.k]!==undefined && OVER[it.k]!=="") ? OVER[it.k] : it.u; }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
+
+var cur = ls("najin_hub_tab") || "work";
+if(!TABS.some(function(t){return t.id===cur;})) cur="work";
+
+/* ── 탭 바 ── */
+function renderTabs(){
+  var h="";
+  TABS.forEach(function(t){
+    h += '<button class="tab'+(t.id===cur?" on":"")+'" data-id="'+t.id+'" style="--gr:'+t.gr+'">'
+      +  '<span class="e">'+t.emo+'</span>'+t.label+'</button>';
+  });
+  var box=document.getElementById("tabs");
+  box.innerHTML=h;
+  box.querySelectorAll(".tab").forEach(function(b){
+    b.addEventListener("click",function(){
+      cur=this.dataset.id; ls("najin_hub_tab",cur);
+      renderTabs(); renderPanel();
+      this.scrollIntoView({block:"nearest",inline:"center",behavior:"smooth"});
+    });
+  });
+}
+
+/* ── 카드 패널 ── */
+function renderPanel(){
+  var t = TABS.filter(function(x){return x.id===cur;})[0];
+  var h = '<div class="panel" style="--gr:'+t.gr+'">'
+        + '<div class="panelHead"><h2>'+t.emo+' '+t.label+'</h2><small>'+t.note+'</small>'
+        + '<span class="cnt">'+t.items.length+'개</span></div><div class="grid">';
+  t.items.forEach(function(it){
+    var u=urlOf(it), empty=!u, web=/^https?:/i.test(u);
+    h += '<div>'
+      +  '<a class="card'+(empty?" warn":"")+'" '
+      +    (empty ? 'href="javascript:void(0)" onclick="alert(\'주소를 아직 안 넣었어! ✏️ 링크수정 눌러서 넣어줘 😊\')"'
+                  : 'href="'+esc(u)+'"'+(web?' target="_blank" rel="noopener"':''))
+      +  '>'
+      +    '<div class="ic">'+it.ic+'</div>'
+      +    '<div class="tt">'+it.t+'</div>'
+      +    '<div class="ds">'+(empty?"주소 입력 필요":it.d)+'</div>'
+      +    '<div class="arw">'+(empty?"⚠︎":"↗")+'</div>'
+      +  '</a>'
+      +  '<div class="editrow"><input data-k="'+it.k+'" value="'+esc(u)+'" placeholder="https://..."></div>'
+      +  '</div>';
+  });
+  h += '</div></div>';
+  document.getElementById("app").innerHTML=h;
+  document.querySelectorAll(".editrow input").forEach(function(inp){
+    inp.addEventListener("change",function(){ OVER[this.dataset.k]=this.value.trim(); saveOver(); });
+  });
+}
+
+/* ── 날짜 · 인사 ── */
+(function(){
+  var d=new Date(), day="일월화수목금토"[d.getDay()], hh=d.getHours();
+  document.getElementById("today").textContent =
+    d.getFullYear()+". "+(d.getMonth()+1)+". "+d.getDate()+" ("+day+")";
+  var msg;
+  if(hh<6)       msg='고요한 새벽이야 <em>🌙</em>';
+  else if(hh<12) msg='좋은 아침, <em>진옥</em> ☀️';
+  else if(hh<18) msg='오후도 화이팅 <em>💪</em>';
+  else if(hh<22) msg='오늘 수고했어 <em>🌆</em>';
+  else           msg='이제 좀 쉬자 <em>🌛</em>';
+  document.getElementById("greet").innerHTML=msg;
+})();
+
+/* ── 편집 토글 ── */
+var btn=document.getElementById("editBtn");
+btn.addEventListener("click",function(){
+  var on=document.body.classList.toggle("edit");
+  btn.classList.toggle("on",on);
+  btn.textContent = on ? "✅ 수정 끝" : "✏️ 링크수정";
+  if(!on) renderPanel();
+});
+
+renderTabs(); renderPanel();
+
+/* ── 아들 학습앱 최신 버전 자동 표시 (2026-08-15) ──
+   학습앱의 🩺진단 파일(diag.js)에 적힌 배포 버전 문구를 가져와서
+   이 카드 설명에 붙여줘요. 오프라인이거나 못 가져오면 그냥 원래 문구 유지. */
+(function(){
+  var STUDY_URL = "https://studybuddy-app-22f31.web.app/diag.js";
+  fetch(STUDY_URL, { cache: "no-store" }).then(function(r){ return r.text(); }).then(function(txt){
+    var m = txt.match(/DIAG_BUILD\s*=\s*'([^']+)'/);
+    if (!m) return;
+    var it = null;
+    TABS.some(function(t){ it = t.items.filter(function(x){ return x.k === "study"; })[0]; return !!it; });
+    if (!it) return;
+    it.d = "고1 학습앱 · " + m[1];
+    if (cur === "auto") renderPanel();
+  }).catch(function(){ /* CORS 막히거나 오프라인이면 조용히 무시 */ });
+})();
+</script>
+</body>
+</html>
