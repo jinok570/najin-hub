@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>교실일지 저장 점검</title>
+<meta name="theme-color" content="#1a1a2e">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#1a1a2e;color:#faf8f3;font-family:-apple-system,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;padding:16px;line-height:1.55;font-size:15px}
+h1{font-size:20px;margin-bottom:2px}
+.sub{font-size:12.5px;color:#9aa0b5;margin-bottom:16px}
+.card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px 15px;margin-bottom:11px}
+.card.ok{border-color:#10b981;background:rgba(16,185,129,.13)}
+.card.bad{border-color:#ef4444;background:rgba(239,68,68,.13)}
+.lbl{font-size:12.5px;color:#9aa0b5;letter-spacing:.03em}
+.big{font-size:34px;font-weight:800;line-height:1.15;margin:2px 0 1px}
+.small{font-size:12px;color:#9aa0b5}
+.verdict{border-radius:14px;padding:15px;margin-bottom:14px;font-size:15.5px;font-weight:700;text-align:center;line-height:1.6}
+.v-ok{background:rgba(16,185,129,.18);border:1px solid #10b981;color:#6ee7b7}
+.v-bad{background:rgba(239,68,68,.18);border:1px solid #ef4444;color:#fca5a5}
+.v-warn{background:rgba(251,191,36,.15);border:1px solid #fbbf24;color:#fcd34d}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+td{padding:7px 0;border-bottom:1px solid rgba(255,255,255,.09);vertical-align:top}
+tr:last-child td{border-bottom:none}
+td:first-child{color:#9aa0b5;white-space:nowrap;padding-right:10px}
+td:last-child{text-align:right;font-weight:700;word-break:break-all}
+button{display:block;width:100%;margin-top:10px;padding:15px;border:none;border-radius:13px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer}
+.b1{background:#faf8f3;color:#1a1a2e}
+.b2{background:#4a7c59;color:#fff}
+.b3{background:transparent;color:#9aa0b5;border:1px solid rgba(255,255,255,.2)}
+.note{font-size:12px;color:#9aa0b5;margin-top:14px;line-height:1.7}
+</style>
+</head>
+<body>
+
+<h1>🩺 교실일지 저장 점검</h1>
+<div class="sub">이 화면을 캡처해서 보내주세요</div>
+
+<div class="verdict" id="verdict">확인 중…</div>
+
+<div class="card" id="cCon">
+  <div class="lbl">💬 상담기록 — 저장된 건수</div>
+  <div class="big" id="conNum">—</div>
+  <div class="small" id="conSub"></div>
+</div>
+
+<div class="card" id="cEval">
+  <div class="lbl">📋 유아평가 — 저장된 일수</div>
+  <div class="big" id="evalNum">—</div>
+  <div class="small" id="evalSub"></div>
+</div>
+
+<div class="card">
+  <div class="lbl">자세한 내용</div>
+  <table>
+    <tr><td>상담기록 반</td><td id="dCls">—</td></tr>
+    <tr><td>첫 기록 항목</td><td id="dFields">—</td></tr>
+    <tr><td>저장공간 사용</td><td id="dQuota">—</td></tr>
+    <tr><td>저장된 키 목록</td><td id="dKeys">—</td></tr>
+    <tr><td>화면 너비</td><td id="dVw">—</td></tr>
+    <tr><td>브라우저</td><td id="dUa">—</td></tr>
+  </table>
+</div>
+
+<button class="b1" id="copyBtn">📋 결과 복사하기</button>
+<button class="b2" id="fixBtn" style="display:none">🔧 목록에 다시 올리기</button>
+<button class="b3" onclick="location.href='eval.html?fromcheck='+Date.now()">← 교실일지로 돌아가기</button>
+
+<div class="note" id="note"></div>
+
+<script>
+(function(){
+  function get(k){ try{ return localStorage.getItem(k); }catch(e){ return "__ERR__"; } }
+  function parse(raw){ if(raw===null||raw==="__ERR__") return null; try{ return JSON.parse(raw); }catch(e){ return "__BAD__"; } }
+
+  var conRaw = get("consult_records_v1");
+  var clsRaw = get("consult_classes_v1");
+  var evRaw  = get("유아평가_v3");
+  var con = parse(conRaw), cls = parse(clsRaw), ev = parse(evRaw);
+
+  /* ── 상담기록 ── */
+  var conN = null, conMsg = "";
+  if(conRaw === "__ERR__"){ conMsg = "저장소를 읽을 수 없어요 (시크릿 모드?)"; }
+  else if(conRaw === null){ conN = 0; conMsg = "저장된 적이 없음 (키 자체가 없어요)"; }
+  else if(con === "__BAD__"){ conMsg = "데이터가 깨졌어요 (" + conRaw.length.toLocaleString() + "자)"; }
+  else if(!Array.isArray(con)){ conMsg = "형식이 이상해요 (배열이 아님: " + typeof con + ")"; }
+  else { conN = con.length; conMsg = conRaw.length.toLocaleString() + "자 저장됨"; }
+  document.getElementById("conNum").textContent = (conN===null? "오류" : conN + "건");
+  document.getElementById("conSub").textContent = conMsg;
+  document.getElementById("cCon").className = "card " + (conN>0 ? "ok" : "bad");
+
+  /* ── 유아평가 ── */
+  var evN = null, evMsg = "";
+  if(evRaw === "__ERR__"){ evMsg = "저장소를 읽을 수 없어요"; }
+  else if(evRaw === null){ evN = 0; evMsg = "저장된 적이 없음"; }
+  else if(ev === "__BAD__"){ evMsg = "데이터가 깨졌어요 (" + evRaw.length.toLocaleString() + "자)"; }
+  else { evN = (ev && ev.records) ? Object.keys(ev.records).length : 0;
+         evMsg = evRaw.length.toLocaleString() + "자 저장됨"; }
+  document.getElementById("evalNum").textContent = (evN===null? "오류" : evN + "일치");
+  document.getElementById("evalSub").textContent = evMsg;
+  document.getElementById("cEval").className = "card " + (evN>0 ? "ok" : "bad");
+
+  /* ── 상세 ── */
+  document.getElementById("dCls").textContent =
+    Array.isArray(cls) ? (cls.length + "개 / 유아 " +
+      cls.reduce(function(a,c){ return a + ((c&&Array.isArray(c.children))?c.children.length:0); },0) + "명")
+    : (clsRaw===null ? "없음" : "형식 이상");
+
+  document.getElementById("dFields").textContent =
+    (Array.isArray(con) && con.length && con[0]) ? Object.keys(con[0]).join(", ") : "—";
+
+  var total = 0, keys = [];
+  try{
+    for(var i=0;i<localStorage.length;i++){
+      var k = localStorage.key(i);
+      var v = localStorage.getItem(k) || "";
+      total += k.length + v.length;
+      keys.push(k + "(" + (v.length>=1000 ? Math.round(v.length/1000)+"k" : v.length) + ")");
+    }
+    document.getElementById("dQuota").textContent = Math.round(total/1024).toLocaleString() + " KB / 약 5,000 KB";
+    document.getElementById("dKeys").textContent = keys.length ? keys.join(", ") : "(비어있음)";
+  }catch(e){
+    document.getElementById("dQuota").textContent = "확인 불가";
+    document.getElementById("dKeys").textContent = "확인 불가";
+  }
+
+  document.getElementById("dVw").textContent = window.innerWidth + " px";
+  var ua = navigator.userAgent;
+  var name = /SamsungBrowser/.test(ua) ? "삼성인터넷" : /EdgA|Edg/.test(ua) ? "엣지"
+           : /Chrome/.test(ua) ? "크롬" : /Firefox/.test(ua) ? "파폭"
+           : /Safari/.test(ua) ? "사파리" : "기타";
+  var standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone;
+  document.getElementById("dUa").textContent = name + (standalone ? " (홈화면앱)" : "");
+
+  /* ── 진단 결론 ── */
+  var v = document.getElementById("verdict"), note = document.getElementById("note");
+  if(conN > 0){
+    v.className = "verdict v-ok";
+    v.innerHTML = "✅ 상담기록 <b>" + conN + "건</b>이 이 폰에<br>제대로 저장되어 있어요";
+    note.innerHTML = "저장은 정상인데 목록이 비어 보인다면 <b>화면 그리기</b> 문제예요.<br>"
+                   + "아래 <b>🔧 목록에 다시 올리기</b>를 눌러보세요.";
+    document.getElementById("fixBtn").style.display = "block";
+  }else if(conN === 0){
+    v.className = "verdict v-bad";
+    v.innerHTML = "❌ 이 폰에 상담기록이<br><b>저장되어 있지 않아요</b>";
+    note.innerHTML = "복원이 실제로는 안 된 거예요. 위 <b>저장된 키 목록</b>에 "
+                   + "<b>consult_records_v1</b> 이 있는지 봐주세요.";
+  }else{
+    v.className = "verdict v-warn";
+    v.innerHTML = "⚠️ 저장소를 읽는 데<br>문제가 있어요";
+    note.innerHTML = "시크릿 모드이거나 브라우저가 저장을 막고 있을 수 있어요.";
+  }
+
+  /* ── 복사 ── */
+  document.getElementById("copyBtn").addEventListener("click", function(){
+    var txt = "[교실일지 점검] 상담기록 " + (conN===null?"오류":conN+"건")
+            + " / 유아평가 " + (evN===null?"오류":evN+"일치")
+            + " / 반 " + document.getElementById("dCls").textContent
+            + " / 저장공간 " + document.getElementById("dQuota").textContent
+            + " / 키 " + document.getElementById("dKeys").textContent
+            + " / 화면 " + window.innerWidth + "px / " + name + (standalone?"(홈화면앱)":"");
+    if(navigator.clipboard){
+      navigator.clipboard.writeText(txt).then(function(){
+        document.getElementById("copyBtn").textContent = "✅ 복사됐어요! 붙여넣기 하세요";
+      }, function(){ prompt("아래 내용을 복사해서 보내주세요", txt); });
+    }else{ prompt("아래 내용을 복사해서 보내주세요", txt); }
+  });
+
+  /* ── 다시 올리기: 저장값을 그대로 다시 써서 앱이 새로 읽게 함 ── */
+  document.getElementById("fixBtn").addEventListener("click", function(){
+    try{
+      localStorage.setItem("consult_records_v1", JSON.stringify(con));
+      localStorage.setItem("consult_classes_v1", JSON.stringify(Array.isArray(cls)?cls.map(function(c){
+        if(c && !Array.isArray(c.children)) c.children = [];
+        return c;
+      }):[]));
+      location.href = "eval.html?fixed=" + Date.now();
+    }catch(e){
+      alert("다시 쓰기 실패: " + (e.message||e));
+    }
+  });
+})();
+</script>
+</body>
+</html>
