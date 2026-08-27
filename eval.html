@@ -5274,6 +5274,7 @@ window.getBackupData = function(){
 window.setBackupData = function(data){
   if(data &amp;&amp; Array.isArray(data.records)) records = data.records;
   if(data &amp;&amp; Array.isArray(data.classes)) classes = data.classes;
+  try{ normalizeData(); }catch(e){}
   saveAll();
   /* 데이터 저장 후 화면을 즉시 다시 그림 (iframe reload 없이) */
   try{ if(typeof renderList===&#x27;function&#x27;) renderList(); }catch(e){}
@@ -5874,12 +5875,26 @@ function showToast(msg){
   toastTimer=setTimeout(()=&gt;el.classList.remove(&#x27;show&#x27;),2400);
 }
 
+/* 데이터 형태 보정 — classes 에 children 이 없으면 화면 전체가 죽는 것 방지 */
+function normalizeData(){
+  if(!Array.isArray(records)) records=[];
+  if(!Array.isArray(classes)) classes=[];
+  classes.forEach(function(c){
+    if(c &amp;&amp; !Array.isArray(c.children)) c.children=[];
+    if(c &amp;&amp; c.name==null) c.name=&#x27;이름없는 반&#x27;;
+  });
+}
+/* 렌더 하나가 실패해도 나머지는 계속 그리도록 */
+function renderAllSafe(){
+  normalizeData();
+  [&#x27;renderToggleArea&#x27;,&#x27;renderList&#x27;,&#x27;renderClassList&#x27;,&#x27;renderStats&#x27;,&#x27;renderApiKeySection&#x27;]
+    .forEach(function(n){
+      try{ if(typeof window[n]===&#x27;function&#x27;) window[n](); }
+      catch(e){ console.error(&#x27;[상담기록] &#x27;+n+&#x27; 실패:&#x27;, e); }
+    });
+}
 loadAll();
-renderToggleArea();
-renderList();
-renderClassList();
-renderStats();
-renderApiKeySection();
+renderAllSafe();
 &lt;/script&gt;&lt;div class=&quot;modal-overlay&quot; id=&quot;editModal&quot; style=&quot;display:none&quot; onclick=&quot;closeEditModal(event)&quot;&gt;
   &lt;div class=&quot;modal-box&quot; onclick=&quot;event.stopPropagation()&quot;&gt;
     &lt;div class=&quot;modal-handle&quot;&gt;&lt;/div&gt;
