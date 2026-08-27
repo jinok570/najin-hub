@@ -65,6 +65,10 @@ button{display:block;width:100%;margin-top:10px;padding:15px;border:none;border-
   </table>
 </div>
 
+<label class="b2" id="restoreBtn" style="display:block;text-align:center;cursor:pointer">📂 백업파일로 지금 복원하기
+  <input type="file" id="restoreFile" style="display:none">
+</label>
+<div id="restoreMsg" style="display:none;margin-top:10px;padding:12px 14px;border-radius:12px;font-size:13.5px;line-height:1.7"></div>
 <button class="b1" id="copyBtn">📋 결과 복사하기</button>
 <button class="b2" id="fixBtn" style="display:none">🔧 목록에 다시 올리기</button>
 <button class="b3" onclick="location.href='eval.html?fromcheck='+Date.now()">← 교실일지로 돌아가기</button>
@@ -193,6 +197,75 @@ button{display:block;width:100%;margin-top:10px;padding:15px;border:none;border-
     v.innerHTML = "⚠️ 저장소를 읽는 데<br>문제가 있어요";
     note.innerHTML = "시크릿 모드이거나 브라우저가 저장을 막고 있을 수 있어요.";
   }
+
+  /* ── 백업파일로 직접 복원 (iframe 안 거침 → 타이밍 문제 없음) ── */
+  document.getElementById("restoreFile").addEventListener("change", function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var box = document.getElementById("restoreMsg");
+    function show(html, ok){
+      box.style.display = "block";
+      box.style.background = ok ? "rgba(16,185,129,.15)" : "rgba(239,68,68,.15)";
+      box.style.border = "1px solid " + (ok ? "#10b981" : "#ef4444");
+      box.style.color = ok ? "#6ee7b7" : "#fca5a5";
+      box.innerHTML = html;
+    }
+    show("📖 파일을 읽는 중…", true);
+    var fr = new FileReader();
+    fr.onload = function(evt){
+      var backup;
+      try{ backup = JSON.parse(evt.target.result); }
+      catch(err){ show("❌ JSON 파일이 아니에요.", false); return; }
+
+      var evalObj = null, consultObj = null;
+      if(backup && backup.type === "교실일지_통합백업" && backup.data){
+        evalObj = backup.data.eval || null;
+        consultObj = backup.data.consult || null;
+      }else if(backup && (backup.children || backup.records)){ evalObj = backup; }
+      else if(Array.isArray(backup)){ consultObj = {records:backup, classes:[]}; }
+      else { show("❌ 인식할 수 없는 백업 형식이에요.", false); return; }
+
+      var out = [], bad = false;
+
+      /* 상담기록 먼저 (작으므로 반드시 성공시킨다) */
+      if(consultObj){
+        var recs = Array.isArray(consultObj.records) ? consultObj.records : [];
+        var cl   = Array.isArray(consultObj.classes) ? consultObj.classes : [];
+        cl.forEach(function(c){ if(c && !Array.isArray(c.children)) c.children = []; });
+        try{
+          localStorage.setItem("consult_records_v1", JSON.stringify(recs));
+          localStorage.setItem("consult_classes_v1", JSON.stringify(cl));
+        }catch(err){ out.push("✗ 상담기록 저장 실패: " + (err.name||err)); bad = true; }
+        /* 되읽어 검증 */
+        var back = null;
+        try{ back = JSON.parse(localStorage.getItem("consult_records_v1") || "[]"); }catch(err){}
+        if(Array.isArray(back) && back.length === recs.length){
+          out.push("✓ 상담기록 <b>" + back.length + "건</b> 확인됨");
+        }else{
+          out.push("✗ 상담기록 검증 실패 (기대 " + recs.length + " / 실제 " + (back?back.length:"?") + ")");
+          bad = true;
+        }
+      }else{ out.push("· 파일에 상담기록이 없어요"); }
+
+      /* 유아평가 */
+      if(evalObj){
+        try{
+          localStorage.setItem("유아평가_v3", JSON.stringify(evalObj));
+          var n = evalObj.records ? Object.keys(evalObj.records).length : 0;
+          out.push("✓ 유아평가 <b>" + n + "일치</b> 확인됨");
+        }catch(err){
+          out.push("✗ 유아평가 저장 실패: " + (err.name||err) + " (공간 부족)");
+          bad = true;
+        }
+      }else{ out.push("· 파일에 유아평가가 없어요"); }
+
+      show((bad ? "⚠️ 일부 실패<br>" : "✅ 복원 완료!<br>") + out.join("<br>")
+           + (bad ? "" : "<br><br>잠시 후 교실일지로 이동해요…"), !bad);
+      if(!bad) setTimeout(function(){ location.href = "eval.html?restored=" + Date.now(); }, 2200);
+    };
+    fr.onerror = function(){ show("❌ 파일을 읽지 못했어요.", false); };
+    fr.readAsText(file, "UTF-8");
+  });
 
   /* ── 복사 ── */
   document.getElementById("copyBtn").addEventListener("click", function(){

@@ -5262,9 +5262,25 @@ let classes  = []; // [{id, name, children:[...]}]
 let selectedChild = &#x27;&#x27;; // 토글로 선택된 이름
 
 /* ── 저장/불러오기 ── */
+var allowEmptyRecordSave = false;   /* 진짜로 다 지웠을 때만 true */
 function saveAll() {
-  try { localStorage.setItem(RECORDS_KEY, JSON.stringify(records)); } catch(e){}
-  try { localStorage.setItem(CLASSES_KEY,  JSON.stringify(classes));  } catch(e){}
+  /* ⚠️ 빈 목록으로 기존 기록을 덮어쓰지 않는다.
+     (앱이 비어있는 상태에서 반 추가 등으로 saveAll 이 돌면 기록이 날아갔었음) */
+  var skip = false;
+  if (!records.length &amp;&amp; !allowEmptyRecordSave) {
+    var cur = null;
+    try { cur = JSON.parse(localStorage.getItem(RECORDS_KEY) || &#x27;[]&#x27;); } catch(e){ cur = []; }
+    if (Array.isArray(cur) &amp;&amp; cur.length) {
+      skip = true;
+      console.warn(&#x27;[상담기록] 빈 목록으로 덮어쓰기를 막고, 저장된 &#x27; + cur.length + &#x27;건을 다시 불러옵니다.&#x27;);
+      records = cur;                       /* 자가 복구 */
+      try { if (typeof renderList === &#x27;function&#x27;) renderList(); } catch(e){}
+      try { if (typeof renderStats === &#x27;function&#x27;) renderStats(); } catch(e){}
+    }
+  }
+  if (!skip) { try { localStorage.setItem(RECORDS_KEY, JSON.stringify(records)); } catch(e){} }
+  try { localStorage.setItem(CLASSES_KEY, JSON.stringify(classes)); } catch(e){}
+  allowEmptyRecordSave = false;
 }
 function loadAll() {
   try { const d=localStorage.getItem(RECORDS_KEY); if(d) records=JSON.parse(d); } catch(e){ records=[]; }
@@ -5529,7 +5545,9 @@ function renderList(){
 }
 function deleteRecord(id){
   if(!confirm(&#x27;이 기록을 삭제할까요?&#x27;)) return;
-  records=records.filter(r=&gt;r.id!==id); saveAll(); renderList();
+  records=records.filter(r=&gt;r.id!==id);
+  allowEmptyRecordSave = true;
+  saveAll(); renderList();
 }
 
 /* ══════════════════
