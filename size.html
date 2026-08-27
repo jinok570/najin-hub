@@ -73,9 +73,11 @@ td:last-child{text-align:right;font-weight:700;font-variant-numeric:tabular-nums
 
   // 이 페이지에도 허브와 동일한 규칙을 적용해서 실제로 먹는지 본다
   var want = 1;
-  if (vw >= 1100) want = 1.58;
-  else if (vw >= 840) want = 1.40;
-  else if (vw >= 600) want = 1.20;
+  if (vw >= 1200) want = 1.75;
+  else if (vw >= 950) want = 1.60;
+  else if (vw >= 760) want = 1.45;
+  else if (vw >= 620) want = 1.30;
+  else if (vw >= 520) want = 1.15;
 
   // zoom 지원 여부 실측
   var probe = document.createElement('div');
@@ -92,11 +94,11 @@ td:last-child{text-align:right;font-weight:700;font-variant-numeric:tabular-nums
   document.getElementById('want').textContent = Math.round(want * 100) + '%';
   document.getElementById('zsup').textContent = zoomWorks ? '✅ 지원함' : '❌ 지원 안함';
 
-  var tier = vw >= 600 ? '확대 구간' : '기본 구간(확대 없음)';
+  var tier = vw >= 520 ? '확대 구간' : '기본 구간(확대 없음)';
   var v = document.getElementById('verdict');
-  if (vw < 600) {
+  if (vw < 520) {
     v.className = 'verdict no';
-    v.innerHTML = '⚠️ 화면이 600px 미만이라<br>확대 규칙이 아예 안 걸려요';
+    v.innerHTML = '⚠️ 화면이 520px 미만이라<br>확대 규칙이 아예 안 걸려요';
   } else if (!zoomWorks) {
     v.className = 'verdict no';
     v.innerHTML = '⚠️ 이 브라우저가 zoom을<br>지원하지 않아요';
@@ -107,9 +109,11 @@ td:last-child{text-align:right;font-weight:700;font-variant-numeric:tabular-nums
 
   // 실제 허브 페이지의 body zoom 을 읽어오기 위해 같은 규칙 적용
   var st = document.createElement('style');
-  st.textContent = '@media screen and (min-width:600px){#probe2{zoom:1.20}}'
-                 + '@media screen and (min-width:840px){#probe2{zoom:1.40}}'
-                 + '@media screen and (min-width:1100px){#probe2{zoom:1.58}}';
+  st.textContent = '@media screen and (min-width:520px){#probe2{zoom:1.15}}'
+                 + '@media screen and (min-width:620px){#probe2{zoom:1.30}}'
+                 + '@media screen and (min-width:760px){#probe2{zoom:1.45}}'
+                 + '@media screen and (min-width:950px){#probe2{zoom:1.60}}'
+                 + '@media screen and (min-width:1200px){#probe2{zoom:1.75}}';
   document.head.appendChild(st);
   var p2 = document.createElement('div');
   p2.id = 'probe2';
