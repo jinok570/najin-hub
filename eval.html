@@ -6286,22 +6286,41 @@ function downloadCombinedBackup(){
       try{ var v=localStorage.getItem(key); return v?JSON.parse(v):null; }catch(e){ return null; }
     }
 
+    /* ⚠️ 메모리와 저장소 중 "더 많은 쪽"을 채택한다.
+       한쪽이 비어 있을 때 빈 백업이 만들어지는 사고를 막기 위함. */
+    function pickBigger(a,b){
+      var la=Array.isArray(a)?a.length:0, lb=Array.isArray(b)?b.length:0;
+      return la>=lb ? (a||[]) : (b||[]);
+    }
+
     /* ─── 유아평가 ─── */
-    var evalData=null;
-    try{ evalData=getIframeBackupData("f-eval"); }catch(e){}      /* 1순위: 메모리(최신) */
-    if(!evalData||!evalData.records) evalData=lsJSON("유아평가_v3"); /* 2순위: 저장소 */
+    var evalMem=null; try{ evalMem=getIframeBackupData("f-eval"); }catch(e){}
+    var evalLs=lsJSON("유아평가_v3");
+    var nMem=(evalMem&&evalMem.records)?Object.keys(evalMem.records).length:0;
+    var nLs =(evalLs &&evalLs.records )?Object.keys(evalLs.records ).length:0;
+    var evalData = (nMem>=nLs ? evalMem : evalLs) || evalLs || evalMem;
 
     /* ─── 상담기록 ─── */
-    var consultData=null;
-    try{ consultData=getIframeBackupData("f-consult"); }catch(e){}
-    if(!consultData||!consultData.records||!consultData.records.length){
-      var r=lsJSON("consult_records_v1");
-      var c=lsJSON("consult_classes_v1");
-      if((r&&r.length)||(c&&c.length)){
-        consultData={records:r||[],classes:c||[]};
-      }else if(!consultData){
-        consultData={records:[],classes:[]};
+    var conMem=null; try{ conMem=getIframeBackupData("f-consult"); }catch(e){}
+    var consultData={
+      records: pickBigger(conMem&&conMem.records, lsJSON("consult_records_v1")),
+      classes: pickBigger(conMem&&conMem.classes, lsJSON("consult_classes_v1"))
+    };
+
+    /* 비어 있는 백업을 모르고 만드는 것 방지 */
+    var _en=(evalData&&evalData.records)?Object.keys(evalData.records).length:0;
+    var _cn=(consultData&&consultData.records)?consultData.records.length:0;
+    var _cc=(consultData&&consultData.classes)?consultData.classes.length:0;
+    if(_cn===0 && _cc>0){
+      if(!confirm("⚠️ 상담기록이 0건입니다.\n\n반 정보("+_cc+"개)만 들어있는 백업이 만들어져요.\n"
+                 +"상담기록 탭에 기록이 보이는데도 0건이라면 백업하지 마세요.\n\n그래도 계속할까요?")) {
+        showBkStatus("백업을 취소했어요. 💬 상담기록 탭을 먼저 열어 목록이 보이는지 확인해주세요.","err");
+        return;
       }
+    }
+    if(_en===0 && _cn===0){
+      showBkStatus("⚠️ 백업할 데이터가 전혀 없어요. 각 탭을 먼저 열어 데이터가 보이는지 확인해주세요.","err");
+      return;
     }
 
     var backup={type:"교실일지_통합백업",version:"1.1",exportedAt:new Date().toISOString(),data:{eval:evalData,consult:consultData}};
