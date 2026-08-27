@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>화면 크기 진단</title>
+<meta name="theme-color" content="#0a0c13">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0c13;color:#f2f4fa;font-family:-apple-system,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;padding:18px;line-height:1.5}
+h1{font-size:20px;margin-bottom:4px}
+.sub{font-size:12px;color:#8b93a7;margin-bottom:16px}
+.big{background:linear-gradient(135deg,#7c3aed,#06b6d4);border-radius:18px;padding:18px;text-align:center;margin-bottom:14px}
+.big .lbl{font-size:12px;opacity:.85;letter-spacing:.08em}
+.big .num{font-size:46px;font-weight:800;line-height:1.1;margin-top:2px}
+.big .unit{font-size:14px;opacity:.85}
+.verdict{border-radius:16px;padding:14px 16px;margin-bottom:14px;font-size:15px;font-weight:700;text-align:center}
+.ok{background:rgba(16,185,129,.18);border:1px solid #10b981;color:#6ee7b7}
+.no{background:rgba(239,68,68,.18);border:1px solid #ef4444;color:#fca5a5}
+table{width:100%;border-collapse:collapse;background:rgba(255,255,255,.045);border-radius:14px;overflow:hidden;font-size:13.5px}
+td{padding:11px 13px;border-bottom:1px solid rgba(255,255,255,.08)}
+tr:last-child td{border-bottom:none}
+td:first-child{color:#8b93a7;white-space:nowrap}
+td:last-child{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.ruler{margin:16px 0 6px;height:26px;background:repeating-linear-gradient(90deg,#7c3aed 0 50px,#06b6d4 50px 100px);border-radius:6px}
+.rnote{font-size:11.5px;color:#8b93a7;text-align:center}
+.samp{margin-top:16px;background:rgba(255,255,255,.045);border-radius:14px;padding:14px}
+.samp p{margin-bottom:6px}
+.s14{font-size:14px}.s18{font-size:18px}.s22{font-size:22px}
+.copy{display:block;width:100%;margin-top:16px;padding:15px;border:none;border-radius:14px;background:#f2f4fa;color:#0a0c13;font-size:15px;font-weight:800;font-family:inherit}
+</style>
+</head>
+<body>
+
+<h1>📏 화면 크기 진단</h1>
+<div class="sub">이 화면을 캡처해서 클로드에게 보내줘</div>
+
+<div class="big">
+  <div class="lbl">브라우저가 보는 화면 너비</div>
+  <div class="num" id="vw">—</div>
+  <div class="unit">CSS px</div>
+</div>
+
+<div class="verdict" id="verdict">확인 중…</div>
+
+<table>
+  <tr><td>적용돼야 할 확대</td><td id="want">—</td></tr>
+  <tr><td>실제 적용된 확대</td><td id="got">—</td></tr>
+  <tr><td>zoom 기능 지원</td><td id="zsup">—</td></tr>
+  <tr><td>화면 높이</td><td id="vh">—</td></tr>
+  <tr><td>기기 픽셀비(DPR)</td><td id="dpr">—</td></tr>
+  <tr><td>실제 해상도</td><td id="scr">—</td></tr>
+  <tr><td>물리적 추정 너비</td><td id="phys">—</td></tr>
+  <tr><td>브라우저</td><td id="ua">—</td></tr>
+</table>
+
+<div class="ruler"></div>
+<div class="rnote">↑ 줄무늬 한 칸 = 50 CSS px</div>
+
+<div class="samp">
+  <p class="s14">14px — 이 크기로 보여요</p>
+  <p class="s18">18px — 이 크기로 보여요</p>
+  <p class="s22">22px — 이 크기로 보여요</p>
+</div>
+
+<button class="copy" id="copyBtn">📋 결과 복사하기</button>
+
+<script>
+(function(){
+  var vw = window.innerWidth;
+  var vh = window.innerHeight;
+  var dpr = window.devicePixelRatio || 1;
+
+  // 이 페이지에도 허브와 동일한 규칙을 적용해서 실제로 먹는지 본다
+  var want = 1;
+  if (vw >= 1100) want = 1.58;
+  else if (vw >= 840) want = 1.40;
+  else if (vw >= 600) want = 1.20;
+
+  // zoom 지원 여부 실측
+  var probe = document.createElement('div');
+  probe.style.cssText = 'position:absolute;left:-9999px;top:0;width:100px;height:10px;zoom:2';
+  document.body.appendChild(probe);
+  var zoomWorks = Math.round(probe.getBoundingClientRect().width) > 150;
+  document.body.removeChild(probe);
+
+  document.getElementById('vw').textContent = vw;
+  document.getElementById('vh').textContent = vh + ' px';
+  document.getElementById('dpr').textContent = dpr;
+  document.getElementById('scr').textContent = screen.width + ' × ' + screen.height;
+  document.getElementById('phys').textContent = Math.round(vw * dpr) + ' 물리px';
+  document.getElementById('want').textContent = Math.round(want * 100) + '%';
+  document.getElementById('zsup').textContent = zoomWorks ? '✅ 지원함' : '❌ 지원 안함';
+
+  var tier = vw >= 600 ? '확대 구간' : '기본 구간(확대 없음)';
+  var v = document.getElementById('verdict');
+  if (vw < 600) {
+    v.className = 'verdict no';
+    v.innerHTML = '⚠️ 화면이 600px 미만이라<br>확대 규칙이 아예 안 걸려요';
+  } else if (!zoomWorks) {
+    v.className = 'verdict no';
+    v.innerHTML = '⚠️ 이 브라우저가 zoom을<br>지원하지 않아요';
+  } else {
+    v.className = 'verdict ok';
+    v.innerHTML = '✅ ' + Math.round(want*100) + '% 확대가 걸리는 게 정상';
+  }
+
+  // 실제 허브 페이지의 body zoom 을 읽어오기 위해 같은 규칙 적용
+  var st = document.createElement('style');
+  st.textContent = '@media screen and (min-width:600px){#probe2{zoom:1.20}}'
+                 + '@media screen and (min-width:840px){#probe2{zoom:1.40}}'
+                 + '@media screen and (min-width:1100px){#probe2{zoom:1.58}}';
+  document.head.appendChild(st);
+  var p2 = document.createElement('div');
+  p2.id = 'probe2';
+  p2.style.cssText = 'position:absolute;left:-9999px;top:0;width:100px;height:10px';
+  document.body.appendChild(p2);
+  var got = probe2.getBoundingClientRect().width / 100;
+  document.body.removeChild(p2);
+  document.getElementById('got').textContent = Math.round(got*100) + '%';
+
+  var ua = navigator.userAgent;
+  var name = /SamsungBrowser/.test(ua) ? '삼성 인터넷'
+           : /EdgA|Edg/.test(ua) ? '엣지'
+           : /Chrome/.test(ua) ? '크롬'
+           : /Firefox/.test(ua) ? '파이어폭스'
+           : /Safari/.test(ua) ? '사파리' : '기타';
+  var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
+  document.getElementById('ua').textContent = name + (standalone ? ' (홈화면앱)' : '');
+
+  document.getElementById('copyBtn').addEventListener('click', function(){
+    var txt = '화면너비 ' + vw + ' / 높이 ' + vh + ' / DPR ' + dpr
+            + ' / 해상도 ' + screen.width + 'x' + screen.height
+            + ' / 기대확대 ' + Math.round(want*100) + '%'
+            + ' / 실제확대 ' + Math.round(got*100) + '%'
+            + ' / zoom지원 ' + (zoomWorks ? 'O' : 'X')
+            + ' / ' + name + (standalone ? '(홈화면앱)' : '');
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(txt).then(function(){
+        document.getElementById('copyBtn').textContent = '✅ 복사됐어요! 붙여넣기 하세요';
+      });
+    } else {
+      prompt('아래 내용을 복사해서 보내주세요', txt);
+    }
+  });
+})();
+</script>
+</body>
+</html>
