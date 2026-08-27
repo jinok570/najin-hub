@@ -5946,7 +5946,7 @@ renderAllSafe();
 &lt;/div&gt;
 &lt;/body&gt;
 &lt;/html&gt;
-"></iframe><div id="f-monthly" class="soon-panel"><div style="font-size:54px;">📅</div><div style="font-weight:700;font-size:17px;color:#5a3e28;">월간계획</div><div>곧 추가될 예정이에요 😊</div></div></div><div id="backupMenu" class="bk-modal" onclick="if(event.target===this)closeBackupMenu()"><div class="bk-box"><div class="bk-head"><span class="bk-title">⚙️ 통합 백업/복원</span><button class="bk-x" onclick="closeBackupMenu()">✕</button></div><div class="bk-body"><div class="bk-desc">📋 유아평가와 💬 상담기록 두 가지 데이터를 <b>한 번에</b> 백업하거나 복원할 수 있어요. 이메일·메신저로 보내기에 편리합니다.</div><button class="bk-btn bk-btn-dl" onclick="downloadCombinedBackup()">📤 통합 백업 받기<br><span style="font-size:11.5px;font-weight:500;opacity:.9;">유아평가 + 상담기록을 하나의 파일로</span></button><label class="bk-btn-up">📥 통합 백업 복원하기<br><span style="font-size:11.5px;font-weight:500;opacity:.9;">받은 백업 파일을 선택하면 두 탭에 분배됨</span><input type="file" accept=".json,application/json" onchange="uploadCombinedBackup(event)"></label><button class="bk-btn bk-btn-c" onclick="closeBackupMenu()">닫기</button><div class="bk-status" id="bkStatus"></div></div></div></div><script>var cur="eval";
+"></iframe><div id="f-monthly" class="soon-panel"><div style="font-size:54px;">📅</div><div style="font-weight:700;font-size:17px;color:#5a3e28;">월간계획</div><div>곧 추가될 예정이에요 😊</div></div></div><div id="backupMenu" class="bk-modal" onclick="if(event.target===this)closeBackupMenu()"><div class="bk-box"><div class="bk-head"><span class="bk-title">⚙️ 통합 백업/복원</span><button class="bk-x" onclick="closeBackupMenu()">✕</button></div><div class="bk-body"><div class="bk-desc">📋 유아평가와 💬 상담기록 두 가지 데이터를 <b>한 번에</b> 백업하거나 복원할 수 있어요. 이메일·메신저로 보내기에 편리합니다.</div><button class="bk-btn bk-btn-dl" onclick="downloadCombinedBackup()">📤 통합 백업 받기<br><span style="font-size:11.5px;font-weight:500;opacity:.9;">유아평가 + 상담기록을 하나의 파일로</span></button><label class="bk-btn-up">📥 통합 백업 복원하기<br><span style="font-size:11.5px;font-weight:500;opacity:.9;">받은 백업 파일을 선택하면 두 탭에 분배됨</span><input type="file" accept=".json,application/json" onchange="uploadCombinedBackup(event)"></label><button class="bk-btn bk-btn-c" onclick="closeBackupMenu()">닫기</button><div class="bk-status" id="bkStatus"></div><div id="bkReport" style="margin-top:12px;padding:11px 12px;border:1px solid #e3d9c8;border-radius:9px;background:#faf8f3;font-size:12px;line-height:1.75;color:#5a4530;"></div></div></div></div><script>var cur="eval";
 /* ── 화면 크기 직접 조절 (A- / A+) : 안쪽 iframe 까지 함께 확대 ── */
 var SZ_STEPS=[1,1.15,1.3,1.5,1.7,2,2.3,2.6,3];
 function szAuto(){var w=window.innerWidth;
@@ -5973,7 +5973,62 @@ function stepScale(dir){
 });
 szApply(); setTimeout(szApply,150); setTimeout(szApply,600); setTimeout(szApply,1500);
 function showTab(id,btn){document.querySelectorAll(".tab").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");var prev=document.getElementById("f-"+cur);if(prev)prev.classList.remove("active");cur=id;var next=document.getElementById("f-"+id);if(next)next.classList.add("active");}
-function openBackupMenu(){document.getElementById("backupMenu").classList.add("open");var s=document.getElementById("bkStatus");s.className="bk-status";s.textContent="";}
+function bkCount(key,kind){
+  var raw=null; try{ raw=localStorage.getItem(key); }catch(e){ return "읽기실패"; }
+  if(raw===null) return "없음";
+  var o=null; try{ o=JSON.parse(raw); }catch(e){ return "깨짐("+raw.length+"자)"; }
+  var n=0;
+  if(kind==="evalrec") n=(o&&o.records)?Object.keys(o.records).length:0;
+  else if(Array.isArray(o)) n=o.length;
+  return n+"개 ("+raw.length.toLocaleString()+"자)";
+}
+function bkMem(id){
+  try{
+    var f=document.getElementById(id);
+    if(!f||!f.contentWindow||typeof f.contentWindow.getBackupData!=="function") return "iframe 미준비";
+    var d=f.contentWindow.getBackupData();
+    if(!d) return "없음";
+    if(id==="f-eval") return (d.records?Object.keys(d.records).length:0)+"개";
+    return (d.records?d.records.length:0)+"건 / 반 "+(d.classes?d.classes.length:0)+"개";
+  }catch(e){ return "오류: "+(e.message||e); }
+}
+function bkQuota(){
+  try{
+    var total=0;
+    for(var i=0;i<localStorage.length;i++){
+      var k=localStorage.key(i);
+      total+=k.length+(localStorage.getItem(k)||"").length;
+    }
+    return Math.round(total/1024).toLocaleString()+" KB 사용 중 (보통 한도 약 5,000 KB)";
+  }catch(e){ return "확인 불가"; }
+}
+function bkRenderReport(){
+  var el=document.getElementById("bkReport");
+  if(!el) return;
+  el.innerHTML =
+     "<b>🔎 지금 이 기기에 저장된 것</b><br>"
+   + "· 유아평가 &nbsp;<b>"+bkCount("유아평가_v3","evalrec")+"</b><br>"
+   + "· 상담기록 &nbsp;<b>"+bkCount("consult_records_v1","arr")+"</b><br>"
+   + "· 상담기록 반 &nbsp;<b>"+bkCount("consult_classes_v1","arr")+"</b><br>"
+   + "<span style='color:#8b6f4e'>· 화면에 올라온 값 — 유아평가 "+bkMem("f-eval")+" / 상담기록 "+bkMem("f-consult")+"</span><br>"
+   + "<span style='color:#8b6f4e'>· 저장공간 "+bkQuota()+"</span>";
+}
+function openBackupMenu(){
+  document.getElementById("backupMenu").classList.add("open");
+  var s=document.getElementById("bkStatus"); s.className="bk-status"; s.textContent="";
+  bkRenderReport();
+}
+/* 복원 직후 새로고침돼도 결과를 다시 보여준다 */
+(function(){
+  var r=null; try{ r=sessionStorage.getItem("bk_last_result"); }catch(e){}
+  if(!r) return;
+  try{ sessionStorage.removeItem("bk_last_result"); }catch(e){}
+  setTimeout(function(){
+    openBackupMenu();
+    showBkStatus("✅ 복원 후 결과<br>"+r,"ok");
+    bkRenderReport();
+  }, 900);
+})();
 function closeBackupMenu(){document.getElementById("backupMenu").classList.remove("open");}
 function showBkStatus(msg,type){var s=document.getElementById("bkStatus");s.className="bk-status "+(type||"ok");s.innerHTML=msg;}
 function getIframeLS(iframeId,key){try{var f=document.getElementById(iframeId);if(!f||!f.contentWindow)return null;var v=f.contentWindow.localStorage.getItem(key);return v;}catch(e){console.error("LS read error:",e);return null;}}
@@ -6119,6 +6174,7 @@ function uploadCombinedBackup(ev){
       showBkStatus("✅ 복원 완료!<br>"+msg.join("<br>")
                   +"<br><br>🔄 잠시 후 화면을 새로 불러올게요…","ok");
       ev.target.value="";
+      try{ sessionStorage.setItem("bk_last_result", msg.join("<br>")); }catch(e){}
       setTimeout(function(){ location.reload(); }, 1800);
       return;
 
