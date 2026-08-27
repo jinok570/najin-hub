@@ -5977,6 +5977,15 @@ function syncKey(pw,salt){
         km,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
     });
 }
+async function gzipBytes(u8){
+  if(typeof CompressionStream==="undefined") return null;
+  var st=new Blob([u8]).stream().pipeThrough(new CompressionStream("gzip"));
+  return new Uint8Array(await new Response(st).arrayBuffer());
+}
+async function gunzipBytes(u8){
+  var st=new Blob([u8]).stream().pipeThrough(new DecompressionStream("gzip"));
+  return new Uint8Array(await new Response(st).arrayBuffer());
+}
 function syncStatusMsg(t,cls){
   var el=document.getElementById("syncStatus");
   el.className="bk-status "+cls; el.innerHTML=t;
@@ -6026,11 +6035,17 @@ function doSyncCreate(){
 
   var salt=crypto.getRandomValues(new Uint8Array(16));
   var iv=crypto.getRandomValues(new Uint8Array(12));
-  syncKey(pw,salt).then(function(key){
-    return crypto.subtle.encrypt({name:"AES-GCM",iv:iv},key,
-      new TextEncoder().encode(JSON.stringify(payload)));
-  }).then(function(ct){
-    var box={v:1,alg:"AES-GCM",kdf:"PBKDF2-SHA256-150000",
+  (async function(){
+    var raw=new TextEncoder().encode(JSON.stringify(payload));
+    var zipped=null;
+    try{ zipped=await gzipBytes(raw); }catch(e){ zipped=null; }
+    var body=zipped||raw;
+    var key=await syncKey(pw,salt);
+    var ct=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},key,body);
+    return {ct:ct,z:zipped?"gzip":null,rawLen:raw.length};
+  })().then(function(res){
+    var ct=res.ct;
+    var box={v:1,alg:"AES-GCM",kdf:"PBKDF2-SHA256-150000",z:res.z,
              at:new Date().toISOString(),
              counts:{eval:en,consult:cn},
              salt:b64enc(salt),iv:b64enc(iv),ct:b64enc(new Uint8Array(ct))};
@@ -6040,7 +6055,8 @@ function doSyncCreate(){
     a.href=url; a.download="sync.json"; a.style.display="none";
     document.body.appendChild(a); a.click();
     setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},2000);
-    syncStatusMsg("✅ <b>sync.json</b> 파일이 만들어졌어요!<br>유아평가 "+en+"일치 · 상담기록 "+cn+"건<br><br>아래 안내대로 배포해주세요.","ok");
+    var mb=(JSON.stringify(box).length/1048576).toFixed(2);
+    syncStatusMsg("✅ <b>sync.json</b> 파일이 만들어졌어요!<br>유아평가 "+en+"일치 · 상담기록 "+cn+"건 · "+mb+" MB"+(res.z?" (압축됨)":"")+"<br><br>아래 안내대로 배포해주세요.","ok");
     document.getElementById("syncPw").value="";
   }).catch(function(e){
     syncStatusMsg("❌ 암호화 실패: "+(e.message||e),"err");
@@ -6048,7 +6064,7 @@ function doSyncCreate(){
 }
 
 /* ── 불러오기 (폰) ── */
-var syncBox=null;
+var syncBox=null, syncTag=null;
 function openSyncRestore(auto){
   syncMode="restore";
   document.getElementById("syncTitle").textContent="☁️ 서버 백업 불러오기";
@@ -6061,6 +6077,7 @@ function openSyncRestore(auto){
 
   fetch(SYNC_URL,{cache:"no-store"}).then(function(r){
     if(!r.ok) throw new Error("서버에 백업 파일이 없어요 (sync.json)");
+    syncTag=r.headers.get("etag")||r.headers.get("last-modified");
     return r.json();
   }).then(function(box){
     syncBox=box;
@@ -6084,9 +6101,13 @@ function doSyncRestore(){
   if(!pw){ syncStatusMsg("암호를 넣어주세요.","err"); return; }
   syncStatusMsg("🔓 암호를 푸는 중… 잠시만요","ok");
 
-  syncKey(pw,b64dec(syncBox.salt)).then(function(key){
-    return crypto.subtle.decrypt({name:"AES-GCM",iv:b64dec(syncBox.iv)},key,b64dec(syncBox.ct));
-  }).then(function(plain){
+  (async function(){
+    var key=await syncKey(pw,b64dec(syncBox.salt));
+    var plain=await crypto.subtle.decrypt({name:"AES-GCM",iv:b64dec(syncBox.iv)},key,b64dec(syncBox.ct));
+    var bytes=new Uint8Array(plain);
+    if(syncBox.z==="gzip") bytes=await gunzipBytes(bytes);
+    return bytes;
+  })().then(function(plain){
     var backup=JSON.parse(new TextDecoder().decode(plain));
     var d=backup.data||{};
     var msg=[];
@@ -6100,7 +6121,10 @@ function doSyncRestore(){
       msg.push("✓ 상담기록 "+((d.consult.records||[]).length)+"건");
     }
     if(!msg.length){ syncStatusMsg("⚠️ 복원할 데이터가 없어요.","err"); return; }
-    try{ localStorage.setItem("sync_applied_at",syncBox.at); }catch(e){}
+    try{
+      localStorage.setItem("sync_applied_at",syncBox.at);
+      if(syncTag){ localStorage.setItem("sync_applied_tag",syncTag); localStorage.setItem("sync_seen_tag",syncTag); }
+    }catch(e){}
     try{ sessionStorage.setItem("bk_last_result",msg.join("<br>")); }catch(e){}
     syncStatusMsg("✅ 복원 완료!<br>"+msg.join("<br>")+"<br><br>🔄 잠시 후 화면을 새로 불러올게요…","ok");
     setTimeout(function(){ location.reload(); },1800);
@@ -6116,15 +6140,18 @@ document.getElementById("syncPw").addEventListener("keydown",function(e){
   if(e.key==="Enter") document.getElementById("syncGo").click();
 });
 
-/* 새 백업이 올라와 있으면 앱 열 때 한 번 물어보기 */
+/* 새 백업이 올라와 있으면 앱 열 때 한 번만 물어보기
+   — 파일이 크므로 HEAD 로 "바뀌었는지"만 확인하고, 실제 내려받기는 사용자가 누를 때 */
 (function(){
   if(!window.fetch||!window.crypto||!crypto.subtle) return;
-  fetch(SYNC_URL,{cache:"no-store"}).then(function(r){ return r.ok?r.json():null; }).then(function(box){
-    if(!box||!box.at) return;
+  fetch(SYNC_URL,{method:"HEAD",cache:"no-store"}).then(function(r){
+    if(!r.ok) return;
+    var tag=r.headers.get("etag")||r.headers.get("last-modified");
+    if(!tag) return;
     var applied=null,seen=null;
-    try{ applied=localStorage.getItem("sync_applied_at"); seen=localStorage.getItem("sync_seen_at"); }catch(e){}
-    if(box.at===applied||box.at===seen) return;
-    try{ localStorage.setItem("sync_seen_at",box.at); }catch(e){}
+    try{ applied=localStorage.getItem("sync_applied_tag"); seen=localStorage.getItem("sync_seen_tag"); }catch(e){}
+    if(tag===applied||tag===seen) return;
+    try{ localStorage.setItem("sync_seen_tag",tag); }catch(e){}
     setTimeout(function(){ openSyncRestore(true); },1200);
   }).catch(function(){});
 })();
