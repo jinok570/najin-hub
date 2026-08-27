@@ -5984,41 +5984,27 @@ function setIframeBackupData(iframeId,data){
 }
 function downloadCombinedBackup(){
   try{
-    /* ─── 유아평가 데이터 가져오기 (3가지 방법 시도) ─── */
-    var evalData=null;
-    /* 방법1: iframe 내부 함수 호출 (가장 안정적) */
-    evalData=getIframeBackupData("f-eval");
-    /* 방법2: iframe localStorage */
-    if(!evalData){
-      var v=getIframeLS("f-eval","유아평가_v3");
-      if(v){try{evalData=JSON.parse(v);}catch(e){}}
-    }
-    /* 방법3: 부모 페이지 localStorage */
-    if(!evalData){
-      try{var v=localStorage.getItem("유아평가_v3");if(v)evalData=JSON.parse(v);}catch(e){}
+    /* 저장소에서 안전하게 읽기 (부모 = iframe 과 같은 origin/저장소) */
+    function lsJSON(key){
+      try{ var v=localStorage.getItem(key); return v?JSON.parse(v):null; }catch(e){ return null; }
     }
 
-    /* ─── 상담기록 데이터 가져오기 (3가지 방법 시도) ─── */
+    /* ─── 유아평가 ─── */
+    var evalData=null;
+    try{ evalData=getIframeBackupData("f-eval"); }catch(e){}      /* 1순위: 메모리(최신) */
+    if(!evalData||!evalData.records) evalData=lsJSON("유아평가_v3"); /* 2순위: 저장소 */
+
+    /* ─── 상담기록 ─── */
     var consultData=null;
-    /* 방법1: iframe 내부 함수 호출 (가장 안정적) */
-    consultData=getIframeBackupData("f-consult");
-    /* 방법2: iframe localStorage */
+    try{ consultData=getIframeBackupData("f-consult"); }catch(e){}
     if(!consultData||!consultData.records||!consultData.records.length){
-      var r=getIframeLS("f-consult","consult_records_v1");
-      var c=getIframeLS("f-consult","consult_classes_v1");
-      if(r||c){
-        consultData={records:r?JSON.parse(r):[],classes:c?JSON.parse(c):[]};
+      var r=lsJSON("consult_records_v1");
+      var c=lsJSON("consult_classes_v1");
+      if((r&&r.length)||(c&&c.length)){
+        consultData={records:r||[],classes:c||[]};
+      }else if(!consultData){
+        consultData={records:[],classes:[]};
       }
-    }
-    /* 방법3: 부모 페이지 localStorage */
-    if(!consultData||!consultData.records||!consultData.records.length){
-      try{
-        var r=localStorage.getItem("consult_records_v1");
-        var c=localStorage.getItem("consult_classes_v1");
-        if(r||c){
-          consultData={records:r?JSON.parse(r):[],classes:c?JSON.parse(c):[]};
-        }
-      }catch(e){}
     }
 
     var backup={type:"교실일지_통합백업",version:"1.1",exportedAt:new Date().toISOString(),data:{eval:evalData,consult:consultData}};
@@ -6057,60 +6043,70 @@ function uploadCombinedBackup(ev){
   reader.onload=function(e){
     try{
       var backup=JSON.parse(e.target.result);
-      var isCombined=(backup.type==="교실일지_통합백업"&&backup.data);
-      var msg=[];
-      if(isCombined){
-        var d=backup.data;
-        if(d.eval){
-          /* 방법1: iframe 내부 함수 */
-          var ok=setIframeBackupData("f-eval",d.eval);
-          /* 방법2: localStorage 직접 */
-          if(!ok)ok=setIframeLS("f-eval","유아평가_v3",JSON.stringify(d.eval));
-          if(!ok){try{localStorage.setItem("유아평가_v3",JSON.stringify(d.eval));ok=true;}catch(e){}}
-          if(ok){
-            var n=d.eval.records?Object.keys(d.eval.records).length:0;
-            msg.push("✓ 유아평가 "+n+"일치 복원");
-          }
-        }
-        if(d.consult){
-          var ok=setIframeBackupData("f-consult",d.consult);
-          if(!ok){
-            if(d.consult.records)setIframeLS("f-consult","consult_records_v1",JSON.stringify(d.consult.records));
-            if(d.consult.classes)setIframeLS("f-consult","consult_classes_v1",JSON.stringify(d.consult.classes));
-            ok=true;
-          }
-          if(!ok){
-            try{
-              if(d.consult.records)localStorage.setItem("consult_records_v1",JSON.stringify(d.consult.records));
-              if(d.consult.classes)localStorage.setItem("consult_classes_v1",JSON.stringify(d.consult.classes));
-              ok=true;
-            }catch(e){}
-          }
-          if(ok){
-            var n=(d.consult.records&&d.consult.records.length)||0;
-            msg.push("✓ 상담기록 "+n+"건 복원");
-          }
-        }
-      }else if(backup.children||backup.records){
-        if(setIframeBackupData("f-eval",backup)||setIframeLS("f-eval","유아평가_v3",JSON.stringify(backup))){
-          msg.push("✓ 유아평가 복원 (단일 백업)");
-        }
+      var evalObj=null, consultObj=null;
+
+      /* ── 백업 형식 판별 ── */
+      if(backup && backup.type==="교실일지_통합백업" && backup.data){
+        evalObj    = backup.data.eval    || null;
+        consultObj = backup.data.consult || null;
+      }else if(backup && (backup.children || backup.records)){
+        evalObj = backup;                             /* 유아평가 단일 백업 */
       }else if(Array.isArray(backup)){
-        if(setIframeBackupData("f-consult",{records:backup,classes:[]})||setIframeLS("f-consult","consult_records_v1",JSON.stringify(backup))){
-          msg.push("✓ 상담기록 "+backup.length+"건 복원");
-        }
+        consultObj = {records:backup, classes:[]};    /* 상담기록 단일 백업 */
       }else{
         showBkStatus("❌ 인식할 수 없는 백업 형식이에요.","err");
-        ev.target.value="";
-        return;
+        ev.target.value=""; return;
       }
-      if(!msg.length){
-        showBkStatus("⚠️ 복원할 데이터가 없어요.","err");
-        ev.target.value="";
-        return;
+
+      /* ── 부모 localStorage 에 직접 기록 ──
+         srcdoc iframe 은 부모와 같은 origin 이라 저장소를 공유한다.
+         따라서 iframe 이 준비됐는지와 무관하게 확실히 저장된다.       */
+      var msg=[], wrote=0;
+
+      if(evalObj){
+        try{
+          localStorage.setItem("유아평가_v3", JSON.stringify(evalObj));
+          var en=evalObj.records?Object.keys(evalObj.records).length:0;
+          msg.push("✓ 유아평가 "+en+"일치"); wrote++;
+        }catch(err){ msg.push("✗ 유아평가 저장 실패 ("+(err.message||err)+")"); }
+      }else{
+        msg.push("· 유아평가 — 파일에 데이터 없음");
       }
-      showBkStatus("✅ 복원 완료!<br>"+msg.join("<br>")+"<br><br>📋 각 탭을 확인해주세요!","ok");
-      setTimeout(function(){closeBackupMenu();},2500);
+
+      if(consultObj){
+        try{
+          var recs=Array.isArray(consultObj.records)?consultObj.records:[];
+          var cls =Array.isArray(consultObj.classes)?consultObj.classes:[];
+          localStorage.setItem("consult_records_v1", JSON.stringify(recs));
+          localStorage.setItem("consult_classes_v1", JSON.stringify(cls));
+          msg.push("✓ 상담기록 "+recs.length+"건"); wrote++;
+        }catch(err){ msg.push("✗ 상담기록 저장 실패 ("+(err.message||err)+")"); }
+      }else{
+        msg.push("· 상담기록 — 파일에 데이터 없음");
+      }
+
+      if(!wrote){
+        showBkStatus("⚠️ 복원된 게 없어요.<br>"+msg.join("<br>"),"err");
+        ev.target.value=""; return;
+      }
+
+      /* ── 진짜로 저장됐는지 되읽어서 검증 ── */
+      var bad=[];
+      if(evalObj && !localStorage.getItem("유아평가_v3")) bad.push("유아평가");
+      if(consultObj && !localStorage.getItem("consult_records_v1")) bad.push("상담기록");
+      if(bad.length){
+        showBkStatus("❌ "+bad.join("·")+" 저장이 확인되지 않았어요.<br>"
+                    +"저장공간이 가득 찼거나 시크릿 모드일 수 있어요.<br>"+msg.join("<br>"),"err");
+        ev.target.value=""; return;
+      }
+
+      /* ── 화면 새로 불러오기 (두 탭 모두 확실히 반영) ── */
+      showBkStatus("✅ 복원 완료!<br>"+msg.join("<br>")
+                  +"<br><br>🔄 잠시 후 화면을 새로 불러올게요…","ok");
+      ev.target.value="";
+      setTimeout(function(){ location.reload(); }, 1800);
+      return;
+
     }catch(err){
       showBkStatus("❌ 파일을 읽을 수 없어요: "+(err.message||err),"err");
     }
