@@ -92,6 +92,14 @@ header .sp{flex:1}
 @media screen and (min-width:950px){ body{zoom:1.60;} }
 @media screen and (min-width:1200px){ body{zoom:1.75;} }
 
+/* ── 크기 조절 버튼 ── */
+.sizeCtl{position:fixed;top:8px;right:8px;z-index:9998;display:inline-flex;align-items:center;gap:2px;
+  border:1px solid var(--line);background:rgba(12,20,36,.92);border-radius:999px;padding:3px;backdrop-filter:blur(10px)}
+.sizeCtl button{border:0;background:rgba(255,255,255,.10);color:var(--tx);font-family:inherit;font-weight:800;
+  font-size:13px;cursor:pointer;width:29px;height:27px;border-radius:999px;padding:0;line-height:1}
+.sizeCtl button:active{background:#1c3356}
+.sizeCtl .val{font-size:11.5px;font-weight:800;color:var(--tx);opacity:.75;min-width:40px;text-align:center;font-variant-numeric:tabular-nums}
+
 </style>
 </head>
 <body>
@@ -585,6 +593,30 @@ window.addEventListener('DOMContentLoaded',()=>{
     show('scrDone');
   };
 });
+</script>
+<div class="sizeCtl" title="화면 크기 조절">
+  <button onclick="stepScale(-1)" aria-label="작게">A−</button>
+  <span class="val" id="szVal">100%</span>
+  <button onclick="stepScale(1)" aria-label="크게">A+</button>
+</div>
+<script>
+/* ── 화면 크기 직접 조절 (A- / A+) ── */
+var SZ_STEPS=[1,1.15,1.3,1.5,1.7,2,2.3,2.6,3];
+function szAuto(){var w=window.innerWidth;
+  return w>=1200?1.7:w>=950?1.6:w>=760?1.45:w>=620?1.3:w>=520?1.15:1;}
+function szLoad(){try{var v=parseFloat(localStorage.getItem("najin_ui_scale"));if(v>0)return v;}catch(e){}return szAuto();}
+function szSave(v){try{localStorage.setItem("najin_ui_scale",String(v));}catch(e){}}
+var SZ=szLoad();
+function szLabel(){var el=document.getElementById("szVal");if(el)el.textContent=Math.round(SZ*100)+"%";}
+function stepScale(dir){
+  var bi=0,bd=1e9,i,d;
+  for(i=0;i<SZ_STEPS.length;i++){d=Math.abs(SZ_STEPS[i]-SZ);if(d<bd){bd=d;bi=i;}}
+  var ni=bi+dir; if(ni<0)ni=0; if(ni>SZ_STEPS.length-1)ni=SZ_STEPS.length-1;
+  SZ=SZ_STEPS[ni]; szSave(SZ); szApply();
+}
+
+function szApply(){ document.body.style.zoom = SZ; szLabel(); }
+szApply();
 </script>
 </body>
 </html>

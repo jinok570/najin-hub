@@ -33,7 +33,7 @@ body::before{
 }
 
 /* ── 헤더 ── */
-header{padding:28px 4px 16px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+header{padding:28px 4px 16px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .date{font-size:12px;color:var(--sub);font-weight:700;letter-spacing:.09em}
 .hi{font-size:25px;font-weight:800;margin-top:6px;letter-spacing:-.03em;line-height:1.15}
 .hi em{
@@ -128,6 +128,12 @@ header{padding:28px 4px 16px;display:flex;align-items:flex-end;justify-content:s
 }
 .tip b{color:var(--ink);font-weight:700}
 footer{text-align:center;font-size:11px;color:var(--sub);padding:20px 0 4px;opacity:.6}
+/* ── 크기 조절 버튼 ── */
+.sizeCtl{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px;backdrop-filter:blur(10px);flex-shrink:0}
+.sizeCtl button{border:0;background:rgba(255,255,255,.07);color:var(--ink);font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;width:29px;height:27px;border-radius:999px;padding:0;line-height:1}
+.sizeCtl button:active{background:linear-gradient(100deg,#7c3aed,#06b6d4);color:#fff}
+.sizeCtl .val{font-size:11.5px;font-weight:800;color:var(--sub);min-width:40px;text-align:center;font-variant-numeric:tabular-nums}
+.hdrRight{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 
 /* ── 큰 화면(폴드 펼침 · 태블릿)에서 UI 전체 확대 ── */
 @media screen and (min-width:520px){ body{zoom:1.15;} }
@@ -144,7 +150,14 @@ footer{text-align:center;font-size:11px;color:var(--sub);padding:20px 0 4px;opac
     <div class="date" id="today">—</div>
     <div class="hi" id="greet">안녕, <em>진옥</em> 👋</div>
   </div>
-  <button id="editBtn">✏️ 링크수정</button>
+  <div class="hdrRight">
+    <div class="sizeCtl" title="화면 크기 조절">
+      <button onclick="stepScale(-1)" aria-label="작게">A−</button>
+      <span class="val" id="szVal">100%</span>
+      <button onclick="stepScale(1)" aria-label="크게">A+</button>
+    </div>
+    <button id="editBtn">✏️ 링크수정</button>
+  </div>
 </header>
 
 <div class="tabsWrap"><div class="tabs" id="tabs"></div></div>
@@ -283,6 +296,25 @@ btn.addEventListener("click",function(){
   btn.textContent = on ? "✅ 수정 끝" : "✏️ 링크수정";
   if(!on) renderPanel();
 });
+
+
+/* ── 화면 크기 직접 조절 (A- / A+) ── */
+var SZ_STEPS=[1,1.15,1.3,1.5,1.7,2,2.3,2.6,3];
+function szAuto(){var w=window.innerWidth;
+  return w>=1200?1.7:w>=950?1.6:w>=760?1.45:w>=620?1.3:w>=520?1.15:1;}
+function szLoad(){try{var v=parseFloat(localStorage.getItem("najin_ui_scale"));if(v>0)return v;}catch(e){}return szAuto();}
+function szSave(v){try{localStorage.setItem("najin_ui_scale",String(v));}catch(e){}}
+var SZ=szLoad();
+function szLabel(){var el=document.getElementById("szVal");if(el)el.textContent=Math.round(SZ*100)+"%";}
+function stepScale(dir){
+  var bi=0,bd=1e9,i,d;
+  for(i=0;i<SZ_STEPS.length;i++){d=Math.abs(SZ_STEPS[i]-SZ);if(d<bd){bd=d;bi=i;}}
+  var ni=bi+dir; if(ni<0)ni=0; if(ni>SZ_STEPS.length-1)ni=SZ_STEPS.length-1;
+  SZ=SZ_STEPS[ni]; szSave(SZ); szApply();
+}
+
+function szApply(){ document.body.style.zoom = SZ; szLabel(); }
+szApply();
 
 renderTabs(); renderPanel();
 
