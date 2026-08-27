@@ -57,6 +57,8 @@ button{display:block;width:100%;margin-top:10px;padding:15px;border:none;border-
     <tr><td>상담기록 반</td><td id="dCls">—</td></tr>
     <tr><td>첫 기록 항목</td><td id="dFields">—</td></tr>
     <tr><td>저장공간 사용</td><td id="dQuota">—</td></tr>
+    <tr><td>남은 공간(실측)</td><td id="dFree">측정 중…</td></tr>
+    <tr><td>유아평가 내부 용량</td><td id="dEvalBreak">—</td></tr>
     <tr><td>저장된 키 목록</td><td id="dKeys">—</td></tr>
     <tr><td>화면 너비</td><td id="dVw">—</td></tr>
     <tr><td>브라우저</td><td id="dUa">—</td></tr>
@@ -133,6 +135,40 @@ button{display:block;width:100%;margin-top:10px;padding:15px;border:none;border-
   var standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone;
   document.getElementById("dUa").textContent = name + (standalone ? " (홈화면앱)" : "");
 
+  /* ── 남은 공간 실측: 실제로 써보면서 한계를 찾는다 ── */
+  var freeKB = null;
+  (function(){
+    var K = "__quota_probe__";
+    function canWrite(n){
+      try{ localStorage.setItem(K, new Array(n+1).join("x")); localStorage.removeItem(K); return true; }
+      catch(e){ try{ localStorage.removeItem(K); }catch(e2){} return false; }
+    }
+    if(!canWrite(1024)){ freeKB = 0; return; }
+    var lo = 1024, hi = 3 * 1024 * 1024;
+    if(canWrite(hi)){ freeKB = Math.round(hi/1024); return; }
+    for(var i=0;i<22 && hi-lo>1024;i++){
+      var mid = Math.floor((lo+hi)/2);
+      if(canWrite(mid)) lo = mid; else hi = mid;
+    }
+    freeKB = Math.round(lo/1024);
+  })();
+  document.getElementById("dFree").textContent =
+    (freeKB===null ? "측정 실패" : freeKB.toLocaleString() + " KB 더 쓸 수 있음");
+
+  /* ── 유아평가 내부 용량 나누기 ── */
+  (function(){
+    if(!ev || ev==="__BAD__" || typeof ev!=="object"){ document.getElementById("dEvalBreak").textContent="—"; return; }
+    var rows=[];
+    for(var k in ev){ if(!Object.prototype.hasOwnProperty.call(ev,k)) continue;
+      var n=0; try{ n=JSON.stringify(ev[k]).length; }catch(e){ n=0; }
+      rows.push([k,n]);
+    }
+    rows.sort(function(a,b){ return b[1]-a[1]; });
+    document.getElementById("dEvalBreak").innerHTML = rows.slice(0,4).map(function(r){
+      return r[0]+" " + (r[1]>=1000 ? Math.round(r[1]/1000)+"k" : r[1]);
+    }).join("<br>");
+  })();
+
   /* ── 진단 결론 ── */
   var v = document.getElementById("verdict"), note = document.getElementById("note");
   if(conN > 0){
@@ -141,11 +177,17 @@ button{display:block;width:100%;margin-top:10px;padding:15px;border:none;border-
     note.innerHTML = "저장은 정상인데 목록이 비어 보인다면 <b>화면 그리기</b> 문제예요.<br>"
                    + "아래 <b>🔧 목록에 다시 올리기</b>를 눌러보세요.";
     document.getElementById("fixBtn").style.display = "block";
+  }else if(conN === 0 && freeKB!==null && freeKB < 60){
+    v.className = "verdict v-bad";
+    v.innerHTML = "🚨 <b>저장공간이 꽉 찼어요</b><br>그래서 상담기록이 안 들어가요";
+    note.innerHTML = "유아평가 데이터가 공간을 거의 다 쓰고 있어서, "
+                   + "상담기록(약 2 KB)이 들어갈 자리가 없어요.<br>"
+                   + "남은 공간이 <b>" + freeKB + " KB</b> 뿐이에요. 클로드에게 이 화면을 보내주세요.";
   }else if(conN === 0){
     v.className = "verdict v-bad";
     v.innerHTML = "❌ 이 폰에 상담기록이<br><b>저장되어 있지 않아요</b>";
-    note.innerHTML = "복원이 실제로는 안 된 거예요. 위 <b>저장된 키 목록</b>에 "
-                   + "<b>consult_records_v1</b> 이 있는지 봐주세요.";
+    note.innerHTML = "저장할 공간은 <b>" + (freeKB===null?"?":freeKB) + " KB</b> 남아있어요. "
+                   + "공간 문제는 아니고 복원 자체가 안 된 거예요.";
   }else{
     v.className = "verdict v-warn";
     v.innerHTML = "⚠️ 저장소를 읽는 데<br>문제가 있어요";
@@ -159,6 +201,7 @@ button{display:block;width:100%;margin-top:10px;padding:15px;border:none;border-
             + " / 반 " + document.getElementById("dCls").textContent
             + " / 저장공간 " + document.getElementById("dQuota").textContent
             + " / 키 " + document.getElementById("dKeys").textContent
+            + " / 남은공간 " + (freeKB===null?"?":freeKB+"KB")
             + " / 화면 " + window.innerWidth + "px / " + name + (standalone?"(홈화면앱)":"");
     if(navigator.clipboard){
       navigator.clipboard.writeText(txt).then(function(){
