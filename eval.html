@@ -20,6 +20,10 @@
 .bk-status{margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12.5px;display:none;line-height:1.6;}
 .bk-status.ok{display:block;background:#d4edda;color:#155724;}
 .bk-status.err{display:block;background:#f8d7da;color:#721c24;}
+.sync-pw{width:100%;padding:13px 14px;margin-bottom:10px;border:1.5px solid #d8cfc4;border-radius:10px;font-size:16px;font-family:"Noto Sans KR",sans-serif;background:#fff;color:#2c2416;}
+.sync-pw:focus{outline:none;border-color:#8b6f4e;}
+.bk-btn-sync{background:#5a4530;color:#fff;}
+.bk-note{font-size:11.5px;color:#8b6f4e;line-height:1.7;background:#f7f2e8;border:1px solid #e3d9c8;border-radius:9px;padding:10px 12px;margin-top:10px;}
 /* ── Token usage chip ── */
 .token-chip{display:flex;align-items:center;gap:4px;padding:0 10px;cursor:pointer;color:rgba(255,255,255,.78);font-family:"Noto Sans KR",sans-serif;font-size:11px;font-weight:700;border-left:1px solid rgba(255,255,255,.12);flex-shrink:0;transition:background .15s;letter-spacing:.3px;}
 .token-chip:active{background:rgba(255,255,255,.1);}
@@ -5946,7 +5950,185 @@ renderAllSafe();
 &lt;/div&gt;
 &lt;/body&gt;
 &lt;/html&gt;
-"></iframe><div id="f-monthly" class="soon-panel"><div style="font-size:54px;">📅</div><div style="font-weight:700;font-size:17px;color:#5a3e28;">월간계획</div><div>곧 추가될 예정이에요 😊</div></div></div><div id="backupMenu" class="bk-modal" onclick="if(event.target===this)closeBackupMenu()"><div class="bk-box"><div class="bk-head"><span class="bk-title">⚙️ 통합 백업/복원</span><button class="bk-x" onclick="closeBackupMenu()">✕</button></div><div class="bk-body"><div class="bk-desc">📋 유아평가와 💬 상담기록 두 가지 데이터를 <b>한 번에</b> 백업하거나 복원할 수 있어요. 이메일·메신저로 보내기에 편리합니다.</div><button class="bk-btn bk-btn-dl" onclick="downloadCombinedBackup()">📤 통합 백업 받기<br><span style="font-size:11.5px;font-weight:500;opacity:.9;">유아평가 + 상담기록을 하나의 파일로</span></button><label class="bk-btn-up">📥 통합 백업 복원하기<br><span style="font-size:11.5px;font-weight:500;opacity:.9;">받은 백업 파일을 선택하면 두 탭에 분배됨</span><input type="file" accept=".json,application/json" onchange="uploadCombinedBackup(event)"></label><button class="bk-btn bk-btn-c" onclick="closeBackupMenu()">닫기</button><div class="bk-status" id="bkStatus"></div><div id="bkReport" style="margin-top:12px;padding:11px 12px;border:1px solid #e3d9c8;border-radius:9px;background:#faf8f3;font-size:12px;line-height:1.75;color:#5a4530;"></div></div></div></div><script>var cur="eval";
+"></iframe><div id="f-monthly" class="soon-panel"><div style="font-size:54px;">📅</div><div style="font-weight:700;font-size:17px;color:#5a3e28;">월간계획</div><div>곧 추가될 예정이에요 😊</div></div></div><div id="backupMenu" class="bk-modal" onclick="if(event.target===this)closeBackupMenu()"><div class="bk-box"><div class="bk-head"><span class="bk-title">⚙️ 통합 백업/복원</span><button class="bk-x" onclick="closeBackupMenu()">✕</button></div><div class="bk-body"><div class="bk-desc">📋 유아평가와 💬 상담기록 두 가지 데이터를 <b>한 번에</b> 백업하거나 복원할 수 있어요. 이메일·메신저로 보내기에 편리합니다.</div><button class="bk-btn bk-btn-dl" onclick="downloadCombinedBackup()">📤 통합 백업 받기<br><span style="font-size:11.5px;font-weight:500;opacity:.9;">유아평가 + 상담기록을 하나의 파일로</span></button><label class="bk-btn-up">📥 통합 백업 복원하기<br><span style="font-size:11.5px;font-weight:500;opacity:.9;">받은 백업 파일을 선택하면 두 탭에 분배됨</span><input type="file" accept=".json,application/json" onchange="uploadCombinedBackup(event)"></label><button class="bk-btn bk-btn-sync" onclick="openSyncCreate()">🔐 암호백업 만들기<br><span style="font-size:11.5px;font-weight:500;opacity:.9;">폰으로 보낼 암호화 파일 (sync.json)</span></button><button class="bk-btn bk-btn-sync" onclick="openSyncRestore(false)">☁️ 서버 백업 불러오기<br><span style="font-size:11.5px;font-weight:500;opacity:.9;">사이트에 올려둔 암호백업 가져오기</span></button><button class="bk-btn bk-btn-c" onclick="closeBackupMenu()">닫기</button><div class="bk-status" id="bkStatus"></div><div id="bkReport" style="margin-top:12px;padding:11px 12px;border:1px solid #e3d9c8;border-radius:9px;background:#faf8f3;font-size:12px;line-height:1.75;color:#5a4530;"></div></div></div></div><div id="syncModal" class="bk-modal" onclick="if(event.target===this)closeSyncModal()"><div class="bk-box"><div class="bk-head"><span class="bk-title" id="syncTitle">🔐 암호백업</span><button class="bk-x" onclick="closeSyncModal()">✕</button></div><div class="bk-body"><div class="bk-desc" id="syncDesc"></div><input class="sync-pw" id="syncPw" type="password" autocomplete="off" placeholder="암호 입력"><button class="bk-btn bk-btn-dl" id="syncGo">확인</button><button class="bk-btn bk-btn-c" onclick="closeSyncModal()">닫기</button><div class="bk-status" id="syncStatus"></div><div class="bk-note" id="syncNote"></div></div></div></div><script>var cur="eval";
+/* ════════════════════════════════════════════════
+   🔐 암호백업 (기기간 전송)  — AES-GCM + PBKDF2
+   PC에서 만들어 sync.json 으로 배포 → 폰에서 암호 넣고 복원
+   ════════════════════════════════════════════════ */
+var SYNC_URL="sync.json";
+var syncMode="create";
+
+function b64enc(bytes){
+  var s="",CH=8192;
+  for(var i=0;i<bytes.length;i+=CH) s+=String.fromCharCode.apply(null,bytes.subarray(i,i+CH));
+  return btoa(s);
+}
+function b64dec(str){
+  var bin=atob(str),out=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++) out[i]=bin.charCodeAt(i);
+  return out;
+}
+function syncKey(pw,salt){
+  var enc=new TextEncoder();
+  return crypto.subtle.importKey("raw",enc.encode(pw),"PBKDF2",false,["deriveKey"])
+    .then(function(km){
+      return crypto.subtle.deriveKey(
+        {name:"PBKDF2",salt:salt,iterations:150000,hash:"SHA-256"},
+        km,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+    });
+}
+function syncStatusMsg(t,cls){
+  var el=document.getElementById("syncStatus");
+  el.className="bk-status "+cls; el.innerHTML=t;
+}
+function closeSyncModal(){
+  document.getElementById("syncModal").classList.remove("open");
+  document.getElementById("syncPw").value="";
+}
+
+/* ── 만들기 (PC) ── */
+function openSyncCreate(){
+  syncMode="create";
+  document.getElementById("syncTitle").textContent="🔐 암호백업 만들기";
+  document.getElementById("syncDesc").innerHTML=
+    "유아평가·상담기록을 <b>암호로 잠근 파일</b>로 만들어요.<br>"
+    +"폰에서 이 암호를 넣어야만 열려서, 공개 주소에 올려도 내용이 보이지 않아요.";
+  document.getElementById("syncPw").placeholder="새 암호 (잊으면 못 열어요)";
+  document.getElementById("syncGo").textContent="🔐 암호 걸어 파일 만들기";
+  document.getElementById("syncStatus").className="bk-status";
+  document.getElementById("syncNote").innerHTML=
+    "<b>만든 뒤 이렇게 하세요</b><br>"
+    +"① 받은 파일 이름을 <b>sync.json</b> 으로<br>"
+    +"② <b>나진허브_배포</b> 폴더에 넣기<br>"
+    +"③ <b>배포.bat</b> 더블클릭<br>"
+    +"④ 폰에서 앱 열면 자동으로 물어봐요";
+  document.getElementById("syncModal").classList.add("open");
+}
+
+function doSyncCreate(){
+  var pw=document.getElementById("syncPw").value;
+  if(pw.length<4){ syncStatusMsg("암호를 4자 이상 넣어주세요.","err"); return; }
+  syncStatusMsg("🔐 암호를 거는 중… 잠시만요","ok");
+
+  function lsJSON(k){ try{var v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;} }
+  var evalData=null, consultData=null;
+  try{ evalData=getIframeBackupData("f-eval"); }catch(e){}
+  if(!evalData||!evalData.records) evalData=lsJSON("유아평가_v3");
+  try{ consultData=getIframeBackupData("f-consult"); }catch(e){}
+  if(!consultData||!consultData.records||!consultData.records.length){
+    consultData={records:lsJSON("consult_records_v1")||[],classes:lsJSON("consult_classes_v1")||[]};
+  }
+  var payload={type:"교실일지_통합백업",version:"1.1",exportedAt:new Date().toISOString(),
+               data:{eval:evalData,consult:consultData}};
+  var en=(evalData&&evalData.records)?Object.keys(evalData.records).length:0;
+  var cn=(consultData&&consultData.records)?consultData.records.length:0;
+  if(!en&&!cn){ syncStatusMsg("⚠️ 백업할 데이터가 없어요.","err"); return; }
+
+  var salt=crypto.getRandomValues(new Uint8Array(16));
+  var iv=crypto.getRandomValues(new Uint8Array(12));
+  syncKey(pw,salt).then(function(key){
+    return crypto.subtle.encrypt({name:"AES-GCM",iv:iv},key,
+      new TextEncoder().encode(JSON.stringify(payload)));
+  }).then(function(ct){
+    var box={v:1,alg:"AES-GCM",kdf:"PBKDF2-SHA256-150000",
+             at:new Date().toISOString(),
+             counts:{eval:en,consult:cn},
+             salt:b64enc(salt),iv:b64enc(iv),ct:b64enc(new Uint8Array(ct))};
+    var blob=new Blob([JSON.stringify(box)],{type:"application/json"});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement("a");
+    a.href=url; a.download="sync.json"; a.style.display="none";
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},2000);
+    syncStatusMsg("✅ <b>sync.json</b> 파일이 만들어졌어요!<br>유아평가 "+en+"일치 · 상담기록 "+cn+"건<br><br>아래 안내대로 배포해주세요.","ok");
+    document.getElementById("syncPw").value="";
+  }).catch(function(e){
+    syncStatusMsg("❌ 암호화 실패: "+(e.message||e),"err");
+  });
+}
+
+/* ── 불러오기 (폰) ── */
+var syncBox=null;
+function openSyncRestore(auto){
+  syncMode="restore";
+  document.getElementById("syncTitle").textContent="☁️ 서버 백업 불러오기";
+  document.getElementById("syncDesc").innerHTML="서버에서 백업을 찾는 중…";
+  document.getElementById("syncPw").placeholder="암호 입력";
+  document.getElementById("syncGo").textContent="🔓 암호 풀고 복원하기";
+  document.getElementById("syncStatus").className="bk-status";
+  document.getElementById("syncNote").innerHTML="";
+  document.getElementById("syncModal").classList.add("open");
+
+  fetch(SYNC_URL,{cache:"no-store"}).then(function(r){
+    if(!r.ok) throw new Error("서버에 백업 파일이 없어요 (sync.json)");
+    return r.json();
+  }).then(function(box){
+    syncBox=box;
+    var d=new Date(box.at);
+    var when=d.getFullYear()+"."+(d.getMonth()+1)+"."+d.getDate()+" "
+            +String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+    document.getElementById("syncDesc").innerHTML=
+      "📦 <b>"+when+"</b> 에 만든 백업이 있어요<br>"
+      +"유아평가 <b>"+(box.counts?box.counts.eval:"?")+"</b>일치 · 상담기록 <b>"+(box.counts?box.counts.consult:"?")+"</b>건<br><br>"
+      +"<b>PC에서 정한 암호</b>를 넣어주세요.";
+  }).catch(function(e){
+    syncBox=null;
+    document.getElementById("syncDesc").innerHTML="";
+    syncStatusMsg("❌ "+(e.message||e),"err");
+  });
+}
+
+function doSyncRestore(){
+  if(!syncBox){ syncStatusMsg("❌ 불러올 백업이 없어요.","err"); return; }
+  var pw=document.getElementById("syncPw").value;
+  if(!pw){ syncStatusMsg("암호를 넣어주세요.","err"); return; }
+  syncStatusMsg("🔓 암호를 푸는 중… 잠시만요","ok");
+
+  syncKey(pw,b64dec(syncBox.salt)).then(function(key){
+    return crypto.subtle.decrypt({name:"AES-GCM",iv:b64dec(syncBox.iv)},key,b64dec(syncBox.ct));
+  }).then(function(plain){
+    var backup=JSON.parse(new TextDecoder().decode(plain));
+    var d=backup.data||{};
+    var msg=[];
+    if(d.eval){
+      localStorage.setItem("유아평가_v3",JSON.stringify(d.eval));
+      msg.push("✓ 유아평가 "+(d.eval.records?Object.keys(d.eval.records).length:0)+"일치");
+    }
+    if(d.consult){
+      localStorage.setItem("consult_records_v1",JSON.stringify(d.consult.records||[]));
+      localStorage.setItem("consult_classes_v1",JSON.stringify(d.consult.classes||[]));
+      msg.push("✓ 상담기록 "+((d.consult.records||[]).length)+"건");
+    }
+    if(!msg.length){ syncStatusMsg("⚠️ 복원할 데이터가 없어요.","err"); return; }
+    try{ localStorage.setItem("sync_applied_at",syncBox.at); }catch(e){}
+    try{ sessionStorage.setItem("bk_last_result",msg.join("<br>")); }catch(e){}
+    syncStatusMsg("✅ 복원 완료!<br>"+msg.join("<br>")+"<br><br>🔄 잠시 후 화면을 새로 불러올게요…","ok");
+    setTimeout(function(){ location.reload(); },1800);
+  }).catch(function(e){
+    syncStatusMsg("❌ 암호가 틀렸거나 파일이 손상됐어요.<br><span style='font-size:11px'>("+(e.message||e)+")</span>","err");
+  });
+}
+
+document.getElementById("syncGo").addEventListener("click",function(){
+  if(syncMode==="create") doSyncCreate(); else doSyncRestore();
+});
+document.getElementById("syncPw").addEventListener("keydown",function(e){
+  if(e.key==="Enter") document.getElementById("syncGo").click();
+});
+
+/* 새 백업이 올라와 있으면 앱 열 때 한 번 물어보기 */
+(function(){
+  if(!window.fetch||!window.crypto||!crypto.subtle) return;
+  fetch(SYNC_URL,{cache:"no-store"}).then(function(r){ return r.ok?r.json():null; }).then(function(box){
+    if(!box||!box.at) return;
+    var applied=null,seen=null;
+    try{ applied=localStorage.getItem("sync_applied_at"); seen=localStorage.getItem("sync_seen_at"); }catch(e){}
+    if(box.at===applied||box.at===seen) return;
+    try{ localStorage.setItem("sync_seen_at",box.at); }catch(e){}
+    setTimeout(function(){ openSyncRestore(true); },1200);
+  }).catch(function(){});
+})();
+
 /* ── 화면 크기 직접 조절 (A- / A+) : 안쪽 iframe 까지 함께 확대 ── */
 var SZ_STEPS=[1,1.15,1.3,1.5,1.7,2,2.3,2.6,3];
 function szAuto(){var w=window.innerWidth;
