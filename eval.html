@@ -1501,15 +1501,13 @@ function getApiKey(){ return localStorage.getItem(SK_KEY)||&#x27;&#x27;; }
 function getApiHeaders(){
   const key = getApiKey();
   return {
-    &#x27;Content-Type&#x27;: &#x27;application/json&#x27;,
-    &#x27;x-api-key&#x27;: key,
-    &#x27;anthropic-version&#x27;: &#x27;2023-06-01&#x27;,
-    &#x27;anthropic-dangerous-direct-browser-access&#x27;: &#x27;true&#x27;
+    &#x27;Content-Type&#x27;: &#x27;application/json&#x27;
   };
 }
 
 function checkApiKey(){
-  // Returns true if key exists, false + shows toast if not
+  // Gateway mode (2026-09-02): Claude runs via n8n -> Claude Code subscription. No API key needed.
+  return true;
   if(!getApiKey()){
     showToast(&#x27;⚙️ 더보기 탭에서 API 키를 먼저 설정하세요&#x27;);
     switchTab(&#x27;more&#x27;, document.getElementById(&#x27;tabmore&#x27;));
@@ -1964,7 +1962,7 @@ async function expandAI(fieldId, label){
   iconEl.innerHTML=&#x27;&lt;span class=&quot;spinner&quot;&gt;&lt;/span&gt;&#x27;;
   el.disabled=true;
   try{
-    const res=await fetch(&#x27;https://api.anthropic.com/v1/messages&#x27;,{
+    const res=await fetch(&#x27;https://n8n.auto-navajin.com/webhook/eval-ai&#x27;,{
       method:&#x27;POST&#x27;,
       headers: getApiHeaders(),
       body:JSON.stringify({
@@ -2018,7 +2016,7 @@ async function expandObsAI(){
   icon.innerHTML=&#x27;&lt;span class=&quot;spinner&quot;&gt;&lt;/span&gt;&#x27;;
   el.disabled=true;
   try{
-    const res=await fetch(&#x27;https://api.anthropic.com/v1/messages&#x27;,{
+    const res=await fetch(&#x27;https://n8n.auto-navajin.com/webhook/eval-ai&#x27;,{
       method:&#x27;POST&#x27;,
       headers: getApiHeaders(),
       body:JSON.stringify({
@@ -2356,7 +2354,7 @@ async function autoGenPlayThemeItem(kw){
   r.play_theme_items[kw]=&#x27;(생성 중...)&#x27;;
   renderPlayThemeItems();
   try{
-    const res=await fetch(&#x27;https://api.anthropic.com/v1/messages&#x27;,{
+    const res=await fetch(&#x27;https://n8n.auto-navajin.com/webhook/eval-ai&#x27;,{
       method:&#x27;POST&#x27;,
       headers:getApiHeaders(),
       body:JSON.stringify({
@@ -2571,7 +2569,7 @@ async function generateSafetyMonthPlan(){
   const dates=getWeekdaysInMonth(monthKey);
   const planText=db.safetyPlanFiles.map(f=&gt;`[${f.name}]\n${f.text}`).join(&#x27;\n\n&#x27;).slice(0,8000);
   try{
-    const res=await fetch(&#x27;https://api.anthropic.com/v1/messages&#x27;,{
+    const res=await fetch(&#x27;https://n8n.auto-navajin.com/webhook/eval-ai&#x27;,{
       method:&#x27;POST&#x27;,
       headers:getApiHeaders(),
       body:JSON.stringify({
@@ -2704,7 +2702,7 @@ async function generatePlayMonthPlan(){
   const dates=getWeekdaysInMonth(monthKey);
   const planText=db.playPlanFiles.map(f=&gt;`[${f.name}]\n${f.text}`).join(&#x27;\n\n&#x27;).slice(0,8000);
   try{
-    const res=await fetch(&#x27;https://api.anthropic.com/v1/messages&#x27;,{
+    const res=await fetch(&#x27;https://n8n.auto-navajin.com/webhook/eval-ai&#x27;,{
       method:&#x27;POST&#x27;,
       headers:getApiHeaders(),
       body:JSON.stringify({
@@ -2873,13 +2871,10 @@ async function requestSemesterRows(names, blocksByName, periodLabel, guideText){
   if(!names.length) return {list:[], errMsg:&#x27;&#x27;, authFailed:false};
   const allObs=names.map(n=&gt;blocksByName[n]).join(&#x27;\n\n&#x27;).slice(0,12000);
   try{
-    const res=await fetch(&#x27;https://api.anthropic.com/v1/messages&#x27;,{
+    const res=await fetch(&#x27;https://n8n.auto-navajin.com/webhook/eval-ai&#x27;,{
       method:&#x27;POST&#x27;,
       headers:{
-        &#x27;Content-Type&#x27;:&#x27;application/json&#x27;,
-        &#x27;x-api-key&#x27;:getApiKey(),
-        &#x27;anthropic-version&#x27;:&#x27;2023-06-01&#x27;,
-        &#x27;anthropic-dangerous-direct-browser-access&#x27;:&#x27;true&#x27;
+        &#x27;Content-Type&#x27;:&#x27;application/json&#x27;
       },
       body:JSON.stringify({
         model:rpModel,
@@ -3048,7 +3043,7 @@ const THEME_BATCH_SYS = `당신은 유치원 놀이중심 교육과정 전문가
 async function requestThemeContentForDates(topics, datesList){
   if(!datesList.length) return {list:[], errMsg:&#x27;&#x27;, authFailed:false};
   try{
-    const res=await fetch(&#x27;https://api.anthropic.com/v1/messages&#x27;,{
+    const res=await fetch(&#x27;https://n8n.auto-navajin.com/webhook/eval-ai&#x27;,{
       method:&#x27;POST&#x27;,
       headers:getApiHeaders(),
       body:JSON.stringify({
@@ -4283,13 +4278,10 @@ async function generateReportInner(){
   };
 
   try{
-    const res=await fetch(&#x27;https://api.anthropic.com/v1/messages&#x27;,{
+    const res=await fetch(&#x27;https://n8n.auto-navajin.com/webhook/eval-ai&#x27;,{
       method:&#x27;POST&#x27;,
       headers:{
-        &#x27;Content-Type&#x27;:&#x27;application/json&#x27;,
-        &#x27;x-api-key&#x27;:key,
-        &#x27;anthropic-version&#x27;:&#x27;2023-06-01&#x27;,
-        &#x27;anthropic-dangerous-direct-browser-access&#x27;:&#x27;true&#x27;
+        &#x27;Content-Type&#x27;:&#x27;application/json&#x27;
       },
       body:JSON.stringify({
         model:rpModel,
@@ -4761,9 +4753,9 @@ async function generateCpReport(name){
     record:&#x27;초등학교 생활기록부 행동발달 및 특이사항 기재용 문장을 공식적·간결하게 3~5문장으로 작성하세요.&#x27;
   };
   try{
-    const res=await fetch(&#x27;https://api.anthropic.com/v1/messages&#x27;,{
+    const res=await fetch(&#x27;https://n8n.auto-navajin.com/webhook/eval-ai&#x27;,{
       method:&#x27;POST&#x27;,
-      headers:{&#x27;Content-Type&#x27;:&#x27;application/json&#x27;,&#x27;x-api-key&#x27;:key,&#x27;anthropic-version&#x27;:&#x27;2023-06-01&#x27;,&#x27;anthropic-dangerous-direct-browser-access&#x27;:&#x27;true&#x27;},
+      headers:{&#x27;Content-Type&#x27;:&#x27;application/json&#x27;},
       body:JSON.stringify({
         model:&#x27;claude-sonnet-4-6&#x27;,max_tokens:1000,
         system:`당신은 누리과정 전문 유아교육 평가 보고서 전문가입니다. 관찰 기록을 분석하여 누리과정 5개 영역과 연계된 전문적 발달 평가를 작성합니다. 아이의 강점과 긍정적 성장을 중심으로, 실제 관찰된 내용만 근거로 사용하세요. 보고서 본문만 출력하세요.`,
@@ -5841,13 +5833,10 @@ async function aiExpand(fieldId){
   const childVal=childId?(document.getElementById(childId)?.value||&#x27;&#x27;).trim():getChildName();
 
   try{
-    const res=await fetch(&#x27;https://api.anthropic.com/v1/messages&#x27;,{
+    const res=await fetch(&#x27;https://n8n.auto-navajin.com/webhook/eval-ai&#x27;,{
       method:&#x27;POST&#x27;,
       headers:{
-        &#x27;Content-Type&#x27;:&#x27;application/json&#x27;,
-        &#x27;x-api-key&#x27;:key,
-        &#x27;anthropic-version&#x27;:&#x27;2023-06-01&#x27;,
-        &#x27;anthropic-dangerous-direct-browser-access&#x27;:&#x27;true&#x27;
+        &#x27;Content-Type&#x27;:&#x27;application/json&#x27;
       },
       body:JSON.stringify({
         model:&#x27;claude-sonnet-4-6&#x27;,

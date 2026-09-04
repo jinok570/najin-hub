@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0f1117">
+<title>Claude 게이트웨이 사용량</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:"Noto Sans KR",system-ui,sans-serif;background:#0f1117;color:#e6e8ef;padding:16px}
+h1{font-size:20px;margin:0 0 4px}.sub{color:#8b91a3;font-size:13px;margin-bottom:16px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+.card{background:#1a1d27;border:1px solid #2a2e3d;border-radius:12px;padding:14px}
+.card .k{font-size:12px;color:#8b91a3}.card .v{font-size:24px;font-weight:700;margin-top:4px}.card .s{font-size:12px;color:#6ee7b7;margin-top:2px}
+h2{font-size:15px;margin:18px 0 8px;color:#c7cbd8}
+table{width:100%;border-collapse:collapse;font-size:13px;background:#1a1d27;border-radius:10px;overflow:hidden}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid #2a2e3d}th{color:#8b91a3;font-weight:600;font-size:12px}
+td.n{text-align:right;font-variant-numeric:tabular-nums}th.n{text-align:right}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;background:#2a2e3d}
+.tag.haiku{background:#1e3a2f;color:#6ee7b7}.tag.sonnet{background:#1e2a44;color:#93c5fd}.tag.opus{background:#3a1e44;color:#e9a5ff}
+.err{color:#f87171}.bar{height:8px;background:#2a2e3d;border-radius:4px;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:#60a5fa}
+.wrap{overflow-x:auto}.note{font-size:12px;color:#8b91a3;margin-top:14px;line-height:1.6}
+</style></head><body>
+<h1><a href="index.html" style="color:#8b91a3;text-decoration:none">←</a> 🪙 Claude 사용량</h1>
+<div class="sub" id="sub">불러오는 중…</div>
+<div class="cards" id="cards"></div>
+<h2>📅 최근 14일 (일별)</h2><div class="wrap"><table id="daily"></table></div>
+<h2>🧩 이번 주 · 소스별</h2><div class="wrap"><table id="bysrc"></table></div>
+<h2>🕒 최근 호출 30건</h2><div class="wrap"><table id="recent"></table></div>
+<div class="note">
+· <b>API였으면</b> = Claude Code가 계산한 정가 환산액. 실제 청구 아님 (구독으로 0원). 절감액 계기판으로 보면 됨.<br>
+· 실제 구독 한도(5시간/주간)는 <b>claude.ai → 설정 → Usage</b> 에서 확인. 이 페이지는 "자동화가 얼마나 쓰는지"를 보여주는 용도.<br>
+· 소스 구분을 하려면 n8n HTTP 노드 Headers에 <code>X-Source</code>(영문) 추가.
+</div>
+<script>
+const fmt=n=>Number(n||0).toLocaleString('ko-KR');
+const usd=n=>'$'+Number(n||0).toFixed(2);
+const krw=n=>'약 '+fmt(Math.round(Number(n||0)*1400))+'원';
+function tag(m){return `<span class="tag ${m}">${m}</span>`}
+async function load(){
+  const rows=await fetch('https://n8n.auto-navajin.com/webhook/gw-stats',{cache:'no-store'}).then(r=>r.json());
+  rows.forEach(r=>{r.d=new Date(r.ts);r.i=+r.in_tokens||0;r.o=+r.out_tokens||0;r.c=+r.list_cost_usd||0;r.s=+r.seconds||0;});
+  rows.sort((a,b)=>b.d-a.d);
+  const now=new Date();const today=now.toISOString().slice(0,10);
+  const dayKey=d=>{const t=new Date(d);t.setMinutes(t.getMinutes()-t.getTimezoneOffset());return t.toISOString().slice(0,10)};
+  const monday=new Date(now);monday.setHours(0,0,0,0);monday.setDate(monday.getDate()-((monday.getDay()+6)%7));
+  const sum=(arr,f)=>arr.reduce((a,r)=>a+f(r),0);
+  const tRows=rows.filter(r=>dayKey(r.d)===dayKey(now));
+  const wRows=rows.filter(r=>r.d>=monday);
+  const mRows=rows.filter(r=>r.d.getMonth()===now.getMonth()&&r.d.getFullYear()===now.getFullYear());
+  const card=(k,arr)=>`<div class="card"><div class="k">${k}</div><div class="v">${arr.length}회</div><div class="s">${fmt(sum(arr,r=>r.i+r.o))} 토큰 · API였으면 ${usd(sum(arr,r=>r.c))}</div></div>`;
+  document.getElementById('cards').innerHTML=card('오늘',tRows)+card('이번 주',wRows)+card('이번 달',mRows)+
+    `<div class="card"><div class="k">누적 절감액</div><div class="v">${usd(sum(rows,r=>r.c))}</div><div class="s">${krw(sum(rows,r=>r.c))} · ${rows.length}회</div></div>`;
+  document.getElementById('sub').textContent=`총 ${rows.length}건 기록 · 마지막 호출 ${rows[0]?rows[0].ts.replace('T',' '):'없음'}`;
+  // daily
+  const byDay={};rows.forEach(r=>{const k=dayKey(r.d);(byDay[k]=byDay[k]||[]).push(r)});
+  const days=Object.keys(byDay).sort().reverse().slice(0,14);
+  const maxTok=Math.max(1,...days.map(k=>sum(byDay[k],r=>r.i+r.o)));
+  document.getElementById('daily').innerHTML='<tr><th>날짜</th><th class="n">호출</th><th class="n">토큰</th><th class="n">API였으면</th><th style="width:30%">비중</th></tr>'+
+    days.map(k=>{const a=byDay[k],t=sum(a,r=>r.i+r.o);return `<tr><td>${k}</td><td class="n">${a.length}</td><td class="n">${fmt(t)}</td><td class="n">${usd(sum(a,r=>r.c))}</td><td><div class="bar"><i style="width:${Math.round(t/maxTok*100)}%"></i></div></td></tr>`}).join('');
+  // by source (week)
+  const bySrc={};wRows.forEach(r=>{const k=r.source||'unknown';(bySrc[k]=bySrc[k]||[]).push(r)});
+  document.getElementById('bysrc').innerHTML='<tr><th>소스</th><th class="n">호출</th><th class="n">토큰</th><th class="n">API였으면</th><th class="n">평균 시간</th><th class="n">오류</th></tr>'+
+    Object.entries(bySrc).sort((a,b)=>sum(b[1],r=>r.c)-sum(a[1],r=>r.c)).map(([k,a])=>`<tr><td>${k}</td><td class="n">${a.length}</td><td class="n">${fmt(sum(a,r=>r.i+r.o))}</td><td class="n">${usd(sum(a,r=>r.c))}</td><td class="n">${(sum(a,r=>r.s)/a.length).toFixed(1)}s</td><td class="n ${a.some(r=>r.ok!=='ok')?'err':''}">${a.filter(r=>r.ok!=='ok').length}</td></tr>`).join('')||'<tr><td colspan="6">이번 주 기록 없음</td></tr>';
+  // recent
+  document.getElementById('recent').innerHTML='<tr><th>시각</th><th>모델</th><th>소스</th><th class="n">입력</th><th class="n">출력</th><th class="n">시간</th><th class="n">API였으면</th><th>웹</th><th>상태</th></tr>'+
+    rows.slice(0,30).map(r=>`<tr><td>${r.ts.replace('T',' ')}</td><td>${tag(r.model)}</td><td>${r.source}</td><td class="n">${fmt(r.i)}</td><td class="n">${fmt(r.o)}</td><td class="n">${r.s.toFixed(1)}s</td><td class="n">${usd(r.c)}</td><td>${r.web==='True'?'🔍':''}</td><td class="${r.ok==='ok'?'':'err'}">${r.ok}</td></tr>`).join('');
+}
+load().catch(e=>document.getElementById('sub').textContent='불러오기 실패: '+e);
+</script>
+</body></html>

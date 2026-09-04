@@ -172,15 +172,17 @@ footer{text-align:center;font-size:11px;color:var(--sub);padding:20px 0 4px;opac
   <b>🔐 로그인</b> — 이 앱은 비밀번호를 저장하지 않아. 카드를 누르면 엣지에 저장된 자동암호가 그대로 채워져.
 </div>
 
-<footer>나진 허브 v2 · 다크 · 링크는 ✏️로 언제든 수정</footer>
+<footer>나진 허브 v2.1 · 다크 · 링크는 ✏️로 언제든 수정</footer>
 
 <script>
 var G = {
   work : "linear-gradient(135deg,#7c3aed,#4f46e5)",
   learn: "linear-gradient(135deg,#059669,#0891b2)",
   make : "linear-gradient(135deg,#e11d48,#f59e0b)",
-  auto : "linear-gradient(135deg,#0284c7,#06b6d4)"
+  auto : "linear-gradient(135deg,#0284c7,#06b6d4)",
+  study: "linear-gradient(135deg,#d97706,#dc2626)"
 };
+var STUDY_BASE = "https://studybuddy-app-22f31.web.app";
 
 var TABS = [
   { id:"work", label:"유치원 업무", emo:"🏫", note:"공문 · 평가 · 문서", gr:G.work, items:[
@@ -201,9 +203,13 @@ var TABS = [
     { k:"openart", ic:"🎨", t:"OpenArt",       d:"썸네일 · 인트로", u:"https://openart.ai/" },
     { k:"miri",    ic:"🖼️", t:"미리캔버스",     d:"디자인 편집",     u:"https://www.miricanvas.com/" }
   ]},
-  { id:"auto", label:"자동화 모니터링", emo:"⚙️", note:"n8n · 아들 학습", gr:G.auto, items:[
+  { id:"study", label:"아들 학습", emo:"⚔️", note:"고1 · 항상 최신 버전으로 열림", gr:G.study, items:[
+    { k:"study",   ic:"⚔️", t:"1등급 원정대",  d:"고1 학습앱",        u:STUDY_BASE+"/",      fresh:true },
+    { k:"ladder",  ic:"🪜", t:"수학 사다리",   d:"개념 계단 · 오답",   u:STUDY_BASE+"/math/", fresh:true }
+  ]},
+  { id:"auto", label:"자동화 모니터링", emo:"⚙️", note:"n8n · 게이트웨이", gr:G.auto, items:[
     { k:"n8n",     ic:"🔧", t:"n8n",           d:"워크플로 관제",   u:"https://n8n.auto-navajin.com" },
-    { k:"study",   ic:"⚔️", t:"아들 학습앱",   d:"고1 학습앱 · 원정대", u:"https://studybuddy-app-22f31.web.app" },
+    { k:"usage",   ic:"🪙", t:"Claude 사용량",  d:"게이트웨이 · 절감액", u:"usage.html" },
     { k:"sheets",  ic:"📊", t:"구글 시트",     d:"데이터 · 기록",   u:"https://sheets.google.com/" },
     { k:"cal",     ic:"📅", t:"구글 캘린더",   d:"일정 확인",       u:"https://calendar.google.com/" }
   ]}
@@ -223,6 +229,12 @@ function ls(key,val){
 var OVER = (function(){ try{ return JSON.parse(ls("najin_hub_urls")||"{}"); }catch(e){ return {}; } })();
 function saveOver(){ ls("najin_hub_urls", JSON.stringify(OVER)); }
 function urlOf(it){ return (OVER[it.k]!==undefined && OVER[it.k]!=="") ? OVER[it.k] : it.u; }
+function openUrl(it){
+  var u=urlOf(it);
+  if(!it.fresh) return u;
+  var hash="", i=u.indexOf("#"); if(i>=0){ hash=u.slice(i); u=u.slice(0,i); }
+  return u+(u.indexOf("?")>=0?"&":"?")+"r="+Date.now()+hash;
+}
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
 
 var cur = ls("najin_hub_tab") || "work";
@@ -257,7 +269,7 @@ function renderPanel(){
     h += '<div>'
       +  '<a class="card'+(empty?" warn":"")+'" '
       +    (empty ? 'href="javascript:void(0)" onclick="alert(\'주소를 아직 안 넣었어! ✏️ 링크수정 눌러서 넣어줘 😊\')"'
-                  : 'href="'+esc(u)+'"'+(web?' target="_blank" rel="noopener"':''))
+                  : 'href="'+esc(openUrl(it))+'"'+(web?' target="_blank" rel="noopener"':''))
       +  '>'
       +    '<div class="ic">'+it.ic+'</div>'
       +    '<div class="tt">'+it.t+'</div>'
@@ -330,7 +342,7 @@ renderTabs(); renderPanel();
     TABS.some(function(t){ it = t.items.filter(function(x){ return x.k === "study"; })[0]; return !!it; });
     if (!it) return;
     it.d = "고1 학습앱 · " + m[1];
-    if (cur === "auto") renderPanel();
+    if (cur === "study") renderPanel();
   }).catch(function(){ /* CORS 막히거나 오프라인이면 조용히 무시 */ });
 })();
 </script>
