@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="교실일지"><meta name="theme-color" content="#1a1a2e"><title>🌱 교실일지</title><link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}html,body{height:100%;overflow:hidden;background:#1a1a2e;}.top-bar{position:fixed;top:0;left:0;right:0;height:52px;background:#1a1a2e;border-bottom:3px solid #8b4513;display:flex;align-items:stretch;z-index:9999;box-shadow:0 2px 12px rgba(0,0,0,.5);}.logo{padding:0 12px;display:flex;align-items:center;font-family:"Nanum Myeongjo",serif;font-size:13px;font-weight:800;color:#faf8f3;letter-spacing:2px;white-space:nowrap;border-right:1px solid rgba(255,255,255,.12);flex-shrink:0;}.tab{flex:1;border:none;background:transparent;cursor:pointer;color:rgba(255,255,255,.4);font-family:"Noto Sans KR",sans-serif;font-size:10.5px;font-weight:700;border-bottom:3px solid transparent;margin-bottom:-3px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:all .18s;}.tab .icon{font-size:17px;line-height:1;}.tab.active{color:#fff;border-bottom-color:#c4792a;}.tab:active{background:rgba(255,255,255,.1);}.tab.soon{opacity:.28;pointer-events:none;}.frames{position:fixed;top:52px;left:0;right:0;bottom:0;}iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;display:none;}iframe.active{display:block;}.soon-panel{position:absolute;inset:0;background:#f2ede6;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-size:14px;color:#aaa;}.soon-panel.active{display:flex;}
-/* 통합 백업/복원 메뉴 */
+/* 통합 백업/복원 메뉴 + ☁️ 자동 클라우드 백업(2026-09-04) */
 .menu-btn{padding:0 10px;border:none;background:transparent;cursor:pointer;color:rgba(255,255,255,.7);font-size:19px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-left:1px solid rgba(255,255,255,.12);font-family:"Noto Sans KR",sans-serif;}
 .menu-btn:active{background:rgba(255,255,255,.1);color:#fff;}
 .bk-modal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:99999;display:none;align-items:center;justify-content:center;padding:16px;font-family:"Noto Sans KR",sans-serif;}
@@ -23,6 +23,10 @@
 .sync-pw{width:100%;padding:13px 14px;margin-bottom:10px;border:1.5px solid #d8cfc4;border-radius:10px;font-size:16px;font-family:"Noto Sans KR",sans-serif;background:#fff;color:#2c2416;}
 .sync-pw:focus{outline:none;border-color:#8b6f4e;}
 .bk-btn-sync{background:#5a4530;color:#fff;}
+.bk-btn-cloud{background:linear-gradient(135deg,#0284c7,#0891b2);color:#fff;}
+.cloud-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:999px;font-size:11.5px;font-weight:700;cursor:pointer;border:1px solid transparent;white-space:nowrap;}
+.cloud-chip.off{background:#f3ede3;color:#8b6f4e;border-color:#e3d9c8}.cloud-chip.ok{background:#d4edda;color:#155724}.cloud-chip.busy,.cloud-chip.pending{background:#fff3cd;color:#7a5a00}.cloud-chip.warn{background:#ffe8cc;color:#8a4b00}.cloud-chip.err{background:#f8d7da;color:#721c24}
+@media(max-width:560px){.cloud-chip .cc-tx{display:none}.cloud-chip{padding:4px 7px}}
 .bk-note{font-size:11.5px;color:#8b6f4e;line-height:1.7;background:#f7f2e8;border:1px solid #e3d9c8;border-radius:9px;padding:10px 12px;margin-top:10px;}
 /* ── Token usage chip ── */
 .token-chip{display:flex;align-items:center;gap:4px;padding:0 10px;cursor:pointer;color:rgba(255,255,255,.78);font-family:"Noto Sans KR",sans-serif;font-size:11px;font-weight:700;border-left:1px solid rgba(255,255,255,.12);flex-shrink:0;transition:background .15s;letter-spacing:.3px;}
@@ -77,7 +81,7 @@
   .token-chip{font-size:15px;padding:0 15px;}.token-chip .tk-icon{font-size:17.5px;}
   .sz-b{width:38px;height:38px;font-size:17px;}.sz-v{font-size:14px;min-width:50px;}
   .bk-box{max-width:600px;}.token-box{max-width:500px;}
-}</style></head><body><div class="top-bar"><div class="logo">🌱 교실일지</div><button class="tab active" onclick="showTab('eval',this)"><span class="icon">📋</span>유아평가</button><button class="tab" onclick="showTab('consult',this)"><span class="icon">💬</span>상담기록</button><button class="tab soon"><span class="icon">📅</span>월간계획</button><div class="size-ctl" title="화면 크기 조절"><button class="sz-b" onclick="stepScale(-1)" aria-label="작게">A−</button><span class="sz-v" id="szVal">100%</span><button class="sz-b" onclick="stepScale(1)" aria-label="크게">A+</button></div><div class="token-chip" onclick="openTokenModal()" title="AI 토큰 사용량"><span class="tk-icon">🪙</span><span class="tk-num" id="tkChipNum">0</span></div><button class="menu-btn" onclick="openBackupMenu()" title="통합 백업/복원">⚙️</button></div><div class="frames"><iframe id="f-eval" class="active" srcdoc="&lt;!DOCTYPE html&gt;
+}</style></head><body><div class="top-bar"><div class="logo">🌱 교실일지</div><button class="tab active" onclick="showTab('eval',this)"><span class="icon">📋</span>유아평가</button><button class="tab" onclick="showTab('consult',this)"><span class="icon">💬</span>상담기록</button><button class="tab soon"><span class="icon">📅</span>월간계획</button><div class="size-ctl" title="화면 크기 조절"><button class="sz-b" onclick="stepScale(-1)" aria-label="작게">A−</button><span class="sz-v" id="szVal">100%</span><button class="sz-b" onclick="stepScale(1)" aria-label="크게">A+</button></div><div class="token-chip" onclick="openTokenModal()" title="AI 토큰 사용량"><span class="tk-icon">🪙</span><span class="tk-num" id="tkChipNum">0</span></div><span class="cloud-chip off" id="cloudChip" onclick="openBackupMenu()"><span class="cc-ic">☁️</span><span class="cc-tx">…</span></span><button class="menu-btn" onclick="openBackupMenu()" title="통합 백업/복원">⚙️</button></div><div class="frames"><iframe id="f-eval" class="active" srcdoc="&lt;!DOCTYPE html&gt;
 &lt;html lang=&quot;ko&quot;&gt;
 &lt;head&gt;
 &lt;meta charset=&quot;UTF-8&quot;&gt;
@@ -5957,7 +5961,7 @@ renderAllSafe();
 &lt;/div&gt;
 &lt;/body&gt;
 &lt;/html&gt;
-"></iframe><div id="f-monthly" class="soon-panel"><div style="font-size:54px;">📅</div><div style="font-weight:700;font-size:17px;color:#5a3e28;">월간계획</div><div>곧 추가될 예정이에요 😊</div></div></div><div id="backupMenu" class="bk-modal" onclick="if(event.target===this)closeBackupMenu()"><div class="bk-box"><div class="bk-head"><span class="bk-title">⚙️ 통합 백업/복원</span><button class="bk-x" onclick="closeBackupMenu()">✕</button></div><div class="bk-body"><div class="bk-desc">📋 유아평가와 💬 상담기록 두 가지 데이터를 <b>한 번에</b> 백업하거나 복원할 수 있어요. 이메일·메신저로 보내기에 편리합니다.</div><button class="bk-btn bk-btn-dl" onclick="downloadCombinedBackup()">📤 통합 백업 받기<br><span style="font-size:11.5px;font-weight:500;opacity:.9;">유아평가 + 상담기록을 하나의 파일로</span></button><label class="bk-btn-up">📥 통합 백업 복원하기<br><span style="font-size:11.5px;font-weight:500;opacity:.9;">받은 백업 파일을 선택하면 두 탭에 분배됨</span><input type="file" accept=".json,application/json" onchange="uploadCombinedBackup(event)"></label><button class="bk-btn bk-btn-sync" onclick="openSyncCreate()">🔐 암호백업 만들기<br><span style="font-size:11.5px;font-weight:500;opacity:.9;">폰으로 보낼 암호화 파일 (sync.json)</span></button><button class="bk-btn bk-btn-sync" onclick="openSyncRestore(false)">☁️ 서버 백업 불러오기<br><span style="font-size:11.5px;font-weight:500;opacity:.9;">사이트에 올려둔 암호백업 가져오기</span></button><button class="bk-btn bk-btn-c" onclick="closeBackupMenu()">닫기</button><div class="bk-status" id="bkStatus"></div><div id="bkReport" style="margin-top:12px;padding:11px 12px;border:1px solid #e3d9c8;border-radius:9px;background:#faf8f3;font-size:12px;line-height:1.75;color:#5a4530;"></div></div></div></div><div id="syncModal" class="bk-modal" onclick="if(event.target===this)closeSyncModal()"><div class="bk-box"><div class="bk-head"><span class="bk-title" id="syncTitle">🔐 암호백업</span><button class="bk-x" onclick="closeSyncModal()">✕</button></div><div class="bk-body"><div class="bk-desc" id="syncDesc"></div><input class="sync-pw" id="syncPw" type="password" autocomplete="off" placeholder="암호 입력"><button class="bk-btn bk-btn-dl" id="syncGo">확인</button><button class="bk-btn bk-btn-c" onclick="closeSyncModal()">닫기</button><div class="bk-status" id="syncStatus"></div><div class="bk-note" id="syncNote"></div></div></div></div><script>var cur="eval";
+"></iframe><div id="f-monthly" class="soon-panel"><div style="font-size:54px;">📅</div><div style="font-weight:700;font-size:17px;color:#5a3e28;">월간계획</div><div>곧 추가될 예정이에요 😊</div></div></div><div id="backupMenu" class="bk-modal" onclick="if(event.target===this)closeBackupMenu()"><div class="bk-box"><div class="bk-head"><span class="bk-title">⚙️ 통합 백업/복원</span><button class="bk-x" onclick="closeBackupMenu()">✕</button></div><div class="bk-body"><div id="cloudStatusLine" style="padding:10px 12px;border-radius:9px;background:#eef7fb;border:1px solid #cfe6f2;font-size:12.5px;line-height:1.7;color:#0b4a6e;margin-bottom:10px;"></div><button class="bk-btn bk-btn-cloud" onclick="openCloudSetup()">☁️ 자동 클라우드 백업<br><span style="font-size:11.5px;font-weight:500;opacity:.9;">저장하면 자동 업로드 · 다른 기기에서 자동 복원 (암호로 잠김)</span></button><button class="bk-btn bk-btn-sync" onclick="cloudPullNow(false)">⬇️ 지금 클라우드에서 내려받기<br><span style="font-size:11.5px;font-weight:500;opacity:.9;">다른 기기 기록으로 이 기기를 맞추기</span></button><div class="bk-desc" style="margin-top:6px;">아래는 <b>수동</b> 백업(파일)이에요. 자동 백업이 켜져 있으면 평소엔 필요 없어요.</div><button class="bk-btn bk-btn-dl" onclick="downloadCombinedBackup()">📤 통합 백업 받기<br><span style="font-size:11.5px;font-weight:500;opacity:.9;">유아평가 + 상담기록을 하나의 파일로</span></button><label class="bk-btn-up">📥 통합 백업 복원하기<br><span style="font-size:11.5px;font-weight:500;opacity:.9;">받은 백업 파일을 선택하면 두 탭에 분배됨</span><input type="file" accept=".json,application/json" onchange="uploadCombinedBackup(event)"></label><button class="bk-btn bk-btn-sync" onclick="openSyncCreate()">🔐 암호백업 만들기<br><span style="font-size:11.5px;font-weight:500;opacity:.9;">폰으로 보낼 암호화 파일 (sync.json)</span></button><button class="bk-btn bk-btn-sync" onclick="openSyncRestore(false)">☁️ 서버 백업 불러오기<br><span style="font-size:11.5px;font-weight:500;opacity:.9;">사이트에 올려둔 암호백업 가져오기</span></button><button class="bk-btn bk-btn-c" onclick="closeBackupMenu()">닫기</button><div class="bk-status" id="bkStatus"></div><div id="bkReport" style="margin-top:12px;padding:11px 12px;border:1px solid #e3d9c8;border-radius:9px;background:#faf8f3;font-size:12px;line-height:1.75;color:#5a4530;"></div></div></div></div><div id="syncModal" class="bk-modal" onclick="if(event.target===this)closeSyncModal()"><div class="bk-box"><div class="bk-head"><span class="bk-title" id="syncTitle">🔐 암호백업</span><button class="bk-x" onclick="closeSyncModal()">✕</button></div><div class="bk-body"><div class="bk-desc" id="syncDesc"></div><input class="sync-pw" id="syncPw" type="password" autocomplete="off" placeholder="암호 입력"><button class="bk-btn bk-btn-dl" id="syncGo">확인</button><button class="bk-btn bk-btn-c" onclick="closeSyncModal()">닫기</button><div class="bk-status" id="syncStatus"></div><div class="bk-note" id="syncNote"></div></div></div></div><script>var cur="eval";
 /* ════════════════════════════════════════════════
    🔐 암호백업 (기기간 전송)  — AES-GCM + PBKDF2
    PC에서 만들어 sync.json 으로 배포 → 폰에서 암호 넣고 복원
@@ -6141,7 +6145,7 @@ function doSyncRestore(){
 }
 
 document.getElementById("syncGo").addEventListener("click",function(){
-  if(syncMode==="create") doSyncCreate(); else doSyncRestore();
+  if(syncMode==="cloud") doCloudSetup(); else if(syncMode==="create") doSyncCreate(); else doSyncRestore();
 });
 document.getElementById("syncPw").addEventListener("keydown",function(e){
   if(e.key==="Enter") document.getElementById("syncGo").click();
@@ -6233,6 +6237,7 @@ function openBackupMenu(){
   document.getElementById("backupMenu").classList.add("open");
   var s=document.getElementById("bkStatus"); s.className="bk-status"; s.textContent="";
   bkRenderReport();
+  var cl=document.getElementById("cloudStatusLine"); if(cl) cl.innerHTML=cloudStatusHtml();
 }
 /* 복원 직후 새로고침돼도 결과를 다시 보여준다 */
 (function(){
@@ -6430,6 +6435,292 @@ function uploadCombinedBackup(ev){
   };
   reader.readAsText(file,"UTF-8");
 }
+
+
+/* ════════════════════════════════════════════════════════════════
+   ☁️ 자동 클라우드 백업 · 기기 간 동기화 (2026-09-04)
+   - 저장하면 5초 뒤 자동으로 Firestore 에 올라감 (암호로 AES-GCM 암호화)
+   - 다른 기기에서 앱 열면 최신 기록이 자동 반영 (같은 암호 필요)
+   - Firebase 프로젝트: studybuddy-app-22f31 (학습앱과 공유, 익명 로그인)
+   - 저장 위치: families/classroom-<암호해시>/classroom/latest (+ parts/N)
+   - 비용: 무료 티어 (API 키 결제 없음)
+   ════════════════════════════════════════════════════════════════ */
+var CLOUD_CFG = {
+  apiKey: "AIzaSyD0CBrsO55tOJ-dZY_hMa6xlstPiENBTyE",
+  authDomain: "studybuddy-app-22f31.firebaseapp.com",
+  projectId: "studybuddy-app-22f31",
+  appId: "1:516449803788:web:012e387c1269053457d829"
+};
+var CLOUD_SDK_V = "10.14.1";
+var CLOUD_KEYS = ["유아평가_v3","consult_records_v1","consult_classes_v1"];
+var CLOUD_PART = 700000;            /* Firestore 문서 1MB 제한 → 70만 자씩 나눔 */
+var CLOUD_DEBOUNCE = 5000;
+var CLOUD_PW_KEY = "cj_cloud_pw", CLOUD_AT_KEY = "cj_cloud_applied_at", CLOUD_DEV_KEY = "cj_cloud_device";
+
+var cloudDb = null, cloudReady = null, cloudTimer = null, cloudBusy = false, cloudUnsub = null, cloudRoom = null;
+var cloudLastErr = "";
+
+function cloudLS(k,v){ try{ if(v===undefined) return localStorage.getItem(k); if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){} return v; }
+function cloudPw(){ return cloudLS(CLOUD_PW_KEY)||""; }
+function cloudDevice(){
+  var d=cloudLS(CLOUD_DEV_KEY);
+  if(!d){ d="dev-"+Math.random().toString(36).slice(2,10); cloudLS(CLOUD_DEV_KEY,d); }
+  return d;
+}
+function cloudLoadScript(src){
+  return new Promise(function(res,rej){
+    var s=document.createElement("script"); s.src=src; s.async=true;
+    s.onload=res; s.onerror=function(){ rej(new Error("스크립트 로드 실패: "+src)); };
+    document.head.appendChild(s);
+  });
+}
+async function cloudRoomId(pw){
+  var buf=await crypto.subtle.digest("SHA-256", new TextEncoder().encode("najin-classroom|"+pw));
+  var hex=Array.from(new Uint8Array(buf)).map(function(b){return ("0"+b.toString(16)).slice(-2);}).join("");
+  return "classroom-"+hex.slice(0,32);
+}
+function cloudInit(){
+  if(cloudReady) return cloudReady;
+  var base="https://www.gstatic.com/firebasejs/"+CLOUD_SDK_V+"/";
+  cloudReady=(window.firebase?Promise.resolve():cloudLoadScript(base+"firebase-app-compat.js"))
+    .then(function(){ return window.firebase.auth?null:cloudLoadScript(base+"firebase-auth-compat.js"); })
+    .then(function(){ return window.firebase.firestore?null:cloudLoadScript(base+"firebase-firestore-compat.js"); })
+    .then(function(){
+      if(!firebase.apps.length) firebase.initializeApp(CLOUD_CFG);
+      return firebase.auth().currentUser?null:firebase.auth().signInAnonymously();
+    })
+    .then(function(){ cloudDb=firebase.firestore(); return cloudDb; })
+    .catch(function(e){ cloudReady=null; throw e; });
+  return cloudReady;
+}
+function cloudDoc(room){ return cloudDb.collection("families").doc(room).collection("classroom").doc("latest"); }
+
+/* ── 화면 상태 칩 ── */
+function cloudChip(state,text,title){
+  var el=document.getElementById("cloudChip"); if(!el) return;
+  el.className="cloud-chip "+state; el.title=title||text;
+  el.innerHTML='<span class="cc-ic">☁️</span><span class="cc-tx">'+text+'</span>';
+  var st=document.getElementById("cloudStatusLine"); if(st) st.innerHTML=cloudStatusHtml();
+}
+function cloudStatusHtml(){
+  if(!cloudPw()) return "⚠️ <b>아직 꺼져 있어요.</b> 암호를 정하면 저장할 때마다 자동으로 올라가요.";
+  var at=cloudLS(CLOUD_AT_KEY);
+  var when=at?new Date(at).toLocaleString("ko-KR",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}):"아직 없음";
+  return "✅ <b>켜져 있음</b> · 마지막 클라우드 반영: <b>"+when+"</b>"+(cloudLastErr?"<br>⚠️ 최근 오류: "+cloudLastErr:"");
+}
+
+/* ── 현재 데이터 모으기 ── */
+function cloudCollect(){
+  function lsJSON(k){ try{var v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;} }
+  var evalData=null, consultData=null;
+  try{ evalData=getIframeBackupData("f-eval"); }catch(e){}
+  var evalLs=lsJSON("유아평가_v3");
+  var nMem=(evalData&&evalData.records)?Object.keys(evalData.records).length:0;
+  var nLs=(evalLs&&evalLs.records)?Object.keys(evalLs.records).length:0;
+  if(nLs>=nMem) evalData=evalLs||evalData;
+  try{ consultData=getIframeBackupData("f-consult"); }catch(e){}
+  var cr=lsJSON("consult_records_v1")||[], cc=lsJSON("consult_classes_v1")||[];
+  if(!consultData||!Array.isArray(consultData.records)||consultData.records.length<cr.length) consultData={records:cr,classes:cc};
+  if(!Array.isArray(consultData.classes)||consultData.classes.length<cc.length) consultData.classes=cc;
+  var en=(evalData&&evalData.records)?Object.keys(evalData.records).length:0;
+  var cn=(consultData.records||[]).length;
+  return {payload:{type:"교실일지_통합백업",version:"1.1",exportedAt:new Date().toISOString(),data:{eval:evalData,consult:consultData}},counts:{eval:en,consult:cn}};
+}
+
+/* ── 올리기 ── */
+async function cloudPush(reason){
+  var pw=cloudPw(); if(!pw) return;
+  if(cloudBusy){ cloudSchedule(reason); return; }
+  cloudBusy=true;
+  try{
+    cloudChip("busy","올리는 중…");
+    await cloudInit();
+    var room=await cloudRoomId(pw);
+    var col=cloudCollect();
+    if(!col.counts.eval && !col.counts.consult){ cloudChip("ok","비어 있음","이 기기에 기록이 없어 올리지 않았어요"); return; }
+    /* 클라우드에 더 많은 기록이 있는데 이 기기가 비어 있으면 덮어쓰지 않음 (사고 방지) */
+    var ref=cloudDoc(room);
+    var cur=await ref.get();
+    if(cur.exists){
+      var m=cur.data()||{};
+      var cloudTotal=(m.counts?(m.counts.eval||0)+(m.counts.consult||0):0);
+      var mine=col.counts.eval+col.counts.consult;
+      if(cloudTotal>0 && mine < cloudTotal*0.5 && m.device!==cloudDevice() && !cloudLS(CLOUD_AT_KEY)){
+        cloudChip("warn","확인 필요","클라우드에 더 많은 기록이 있어요. ⚙️ 에서 '지금 내려받기'를 눌러주세요.");
+        return;
+      }
+    }
+    var raw=new TextEncoder().encode(JSON.stringify(col.payload));
+    var zipped=null; try{ zipped=await gzipBytes(raw); }catch(e){}
+    var salt=crypto.getRandomValues(new Uint8Array(16)), iv=crypto.getRandomValues(new Uint8Array(12));
+    var key=await syncKey(pw,salt);
+    var ct=b64enc(new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},key,zipped||raw)));
+    var parts=[]; for(var i=0;i<ct.length;i+=CLOUD_PART) parts.push(ct.slice(i,i+CLOUD_PART));
+    var at=new Date().toISOString();
+    var batch=cloudDb.batch();
+    parts.forEach(function(p,i){ batch.set(ref.collection("parts").doc(String(i)),{i:i,ct:p,at:at}); });
+    batch.set(ref,{v:2,alg:"AES-GCM",kdf:"PBKDF2-SHA256-150000",z:zipped?"gzip":null,at:at,device:cloudDevice(),
+                   counts:col.counts,salt:b64enc(salt),iv:b64enc(iv),n:parts.length,bytes:ct.length});
+    await batch.commit();
+    cloudLS(CLOUD_AT_KEY,at); cloudLastErr="";
+    cloudChip("ok","저장됨 "+new Date(at).toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"}),
+              "유아평가 "+col.counts.eval+"일치 · 상담기록 "+col.counts.consult+"건 · "+Math.round(ct.length/1024)+"KB");
+  }catch(e){
+    cloudLastErr=(e&&e.message)||String(e);
+    cloudChip("err","실패","자동 백업 실패: "+cloudLastErr);
+  }finally{ cloudBusy=false; }
+}
+function cloudSchedule(reason){
+  if(!cloudPw()) return;
+  clearTimeout(cloudTimer);
+  cloudChip("pending","곧 저장");
+  cloudTimer=setTimeout(function(){ cloudPush(reason||"auto"); }, CLOUD_DEBOUNCE);
+}
+
+/* ── 내려받기 ── */
+async function cloudFetch(pw){
+  await cloudInit();
+  var room=await cloudRoomId(pw);
+  var ref=cloudDoc(room);
+  var snap=await ref.get();
+  if(!snap.exists) return null;
+  var m=snap.data();
+  var ct="";
+  if(m.n>0){
+    var ps=await ref.collection("parts").get();
+    var arr=[]; ps.forEach(function(d){ var x=d.data(); arr[x.i]=x.ct; });
+    ct=arr.join("");
+  }else ct=m.ct||"";
+  var key=await syncKey(pw,b64dec(m.salt));
+  var plain=new Uint8Array(await crypto.subtle.decrypt({name:"AES-GCM",iv:b64dec(m.iv)},key,b64dec(ct)));
+  if(m.z==="gzip") plain=await gunzipBytes(plain);
+  return {meta:m, backup:JSON.parse(new TextDecoder().decode(plain))};
+}
+function cloudApply(res){
+  var d=(res.backup&&res.backup.data)||{}; var msg=[];
+  if(d.consult){
+    localStorage.setItem("consult_records_v1",JSON.stringify(d.consult.records||[]));
+    localStorage.setItem("consult_classes_v1",JSON.stringify(d.consult.classes||[]));
+    msg.push("✓ 상담기록 "+((d.consult.records||[]).length)+"건");
+  }
+  if(d.eval){ localStorage.setItem("유아평가_v3",JSON.stringify(d.eval)); msg.push("✓ 유아평가 "+(d.eval.records?Object.keys(d.eval.records).length:0)+"일치"); }
+  cloudLS(CLOUD_AT_KEY,res.meta.at);
+  return msg;
+}
+async function cloudPullNow(force){
+  var pw=cloudPw(); if(!pw){ showBkStatus("먼저 암호를 정해주세요.","err"); return; }
+  try{
+    showBkStatus("☁️ 클라우드에서 내려받는 중…","ok");
+    var res=await cloudFetch(pw);
+    if(!res){ showBkStatus("클라우드에 아직 백업이 없어요. 이 기기 기록을 지금 올릴게요.","ok"); cloudPush("manual"); return; }
+    var when=new Date(res.meta.at).toLocaleString("ko-KR");
+    if(!force && !confirm("클라우드 백업("+when+")으로 이 기기 기록을 바꿀까요?\n유아평가 "+(res.meta.counts?res.meta.counts.eval:"?")+"일치 · 상담기록 "+(res.meta.counts?res.meta.counts.consult:"?")+"건\n\n(이 기기에만 있는 최근 변경은 사라져요)")) { showBkStatus("취소했어요.","err"); return; }
+    var msg=cloudApply(res);
+    try{ sessionStorage.setItem("bk_last_result","☁️ 클라우드에서 복원<br>"+msg.join("<br>")); }catch(e){}
+    showBkStatus("✅ 복원 완료!<br>"+msg.join("<br>")+"<br><br>🔄 화면을 새로 불러올게요…","ok");
+    setTimeout(function(){ location.reload(); },1500);
+  }catch(e){
+    var m=(e&&e.message)||String(e);
+    showBkStatus("❌ 내려받기 실패: "+(/decrypt|operation/i.test(m)?"암호가 다른 기기와 달라요":m),"err");
+  }
+}
+
+/* ── 실시간 감시: 다른 기기가 올리면 자동 반영 ── */
+async function cloudWatch(){
+  var pw=cloudPw(); if(!pw) return;
+  try{
+    await cloudInit();
+    var room=await cloudRoomId(pw); cloudRoom=room;
+    if(cloudUnsub) cloudUnsub();
+    cloudUnsub=cloudDoc(room).onSnapshot(function(snap){
+      if(!snap.exists) return;
+      var m=snap.data()||{};
+      var applied=cloudLS(CLOUD_AT_KEY)||"";
+      if(!m.at || m.at<=applied) return;
+      if(m.device===cloudDevice()){ cloudLS(CLOUD_AT_KEY,m.at); return; }
+      if(cloudTimer || cloudBusy) return;   /* 이 기기에 올리려는 변경이 있으면 건너뜀 (곧 올라감) */
+      cloudChip("busy","새 기록 받는 중…");
+      cloudFetch(pw).then(function(res){
+        if(!res) return;
+        var msg=cloudApply(res);
+        try{ sessionStorage.setItem("bk_last_result","☁️ 다른 기기의 기록을 자동 반영했어요<br>"+msg.join("<br>")); }catch(e){}
+        location.reload();
+      }).catch(function(e){ cloudLastErr=(e&&e.message)||String(e); cloudChip("err","받기 실패",cloudLastErr); });
+    },function(e){ cloudLastErr=e.message||String(e); cloudChip("err","연결 오류",cloudLastErr); });
+    cloudChip("ok","연결됨",cloudStatusHtml().replace(/<[^>]+>/g,""));
+  }catch(e){ cloudLastErr=(e&&e.message)||String(e); cloudChip("err","연결 실패",cloudLastErr); }
+}
+
+/* ── 설정(암호 정하기 / 끄기) ── */
+function openCloudSetup(){
+  syncMode="cloud";
+  document.getElementById("syncTitle").textContent="☁️ 자동 클라우드 백업 켜기";
+  document.getElementById("syncDesc").innerHTML=
+    "암호를 하나 정하면 <b>저장할 때마다 자동으로</b> 암호화해서 클라우드에 올려요.<br>"
+    +"다른 기기(폰·아이패드)에서도 <b>같은 암호</b>를 넣으면 기록이 자동으로 이어져요.<br>"
+    +"<span style='color:#a33'>암호를 잊으면 클라우드 기록을 열 수 없어요.</span>";
+  document.getElementById("syncPw").placeholder="암호 (4자 이상, 모든 기기 동일)";
+  document.getElementById("syncPw").value=cloudPw();
+  document.getElementById("syncGo").textContent="☁️ 자동 백업 켜기";
+  document.getElementById("syncStatus").className="bk-status";
+  document.getElementById("syncNote").innerHTML=cloudPw()?"<button class='bk-btn bk-btn-c' onclick='cloudTurnOff()'>자동 백업 끄기 (기록은 남아요)</button>":"";
+  document.getElementById("syncModal").classList.add("open");
+}
+function cloudTurnOff(){
+  cloudLS(CLOUD_PW_KEY,null); cloudLS(CLOUD_AT_KEY,null);
+  if(cloudUnsub){ cloudUnsub(); cloudUnsub=null; }
+  closeSyncModal(); cloudChip("off","꺼짐","자동 백업이 꺼져 있어요"); showBkStatus("자동 백업을 껐어요. 클라우드에 있던 기록은 그대로 남아 있어요.","ok");
+}
+async function doCloudSetup(){
+  var pw=document.getElementById("syncPw").value;
+  if(pw.length<4){ syncStatusMsg("암호를 4자 이상 넣어주세요.","err"); return; }
+  syncStatusMsg("☁️ 클라우드에 연결하는 중…","ok");
+  try{
+    await cloudInit();
+    var res=null;
+    try{ res=await cloudFetch(pw); }
+    catch(e){ syncStatusMsg("❌ 이 암호로는 클라우드 기록을 열 수 없어요. 다른 기기에서 정한 암호와 같은지 확인해주세요.","err"); return; }
+    cloudLS(CLOUD_PW_KEY,pw);
+    var local=cloudCollect();
+    var mine=local.counts.eval+local.counts.consult;
+    if(res){
+      var cloudN=(res.meta.counts?(res.meta.counts.eval||0)+(res.meta.counts.consult||0):0);
+      var when=new Date(res.meta.at).toLocaleString("ko-KR");
+      if(mine===0 || confirm("클라우드에 "+when+" 백업이 있어요.\n유아평가 "+(res.meta.counts?res.meta.counts.eval:"?")+"일치 · 상담기록 "+(res.meta.counts?res.meta.counts.consult:"?")+"건\n\n[확인] 클라우드 기록을 이 기기에 내려받기\n[취소] 이 기기 기록("+mine+"건)을 클라우드에 올리기")){
+        var msg=cloudApply(res);
+        try{ sessionStorage.setItem("bk_last_result","☁️ 자동 백업 켜짐 · 클라우드에서 복원<br>"+msg.join("<br>")); }catch(e){}
+        syncStatusMsg("✅ 켜졌어요! 클라우드 기록을 받아 새로 불러올게요…","ok");
+        setTimeout(function(){ location.reload(); },1500); return;
+      }
+    }
+    cloudLS(CLOUD_AT_KEY,null);
+    closeSyncModal();
+    showBkStatus("✅ 자동 백업이 켜졌어요. 지금 이 기기 기록을 올리고 있어요…","ok");
+    await cloudPush("setup"); cloudWatch();
+    var st=document.getElementById("cloudStatusLine"); if(st) st.innerHTML=cloudStatusHtml();
+  }catch(e){ syncStatusMsg("❌ 연결 실패: "+((e&&e.message)||e),"err"); }
+}
+
+/* ── 시작: 저장 감지 + 실시간 감시 ── */
+window.addEventListener("storage",function(e){
+  if(e && CLOUD_KEYS.indexOf(e.key)>=0) cloudSchedule("storage");
+});
+window.addEventListener("message",function(e){ if(e.data&&e.data.type==="cj_saved") cloudSchedule("msg"); });
+document.addEventListener("visibilitychange",function(){ if(document.hidden && cloudTimer){ clearTimeout(cloudTimer); cloudTimer=null; cloudPush("hide"); } });
+window.addEventListener("pagehide",function(){ if(cloudTimer){ clearTimeout(cloudTimer); cloudTimer=null; cloudPush("pagehide"); } });
+(function(){
+  if(!window.crypto||!crypto.subtle){ cloudChip("err","미지원","이 브라우저는 암호화를 지원하지 않아요"); return; }
+  if(!cloudPw()){ cloudChip("off","백업 켜기","자동 클라우드 백업이 꺼져 있어요 — 눌러서 켜기"); return; }
+  cloudChip("busy","연결 중…");
+  setTimeout(cloudWatch, 800);
+})();
+
+/* storage 이벤트를 못 받는 브라우저 대비: 20초마다 저장소 서명 비교 */
+(function(){
+  function sig(){ return CLOUD_KEYS.map(function(k){ var v=cloudLS(k)||""; return v.length+":"+v.slice(-120); }).join("|"); }
+  var last=sig();
+  setInterval(function(){ var n=sig(); if(n!==last){ last=n; cloudSchedule("poll"); } }, 20000);
+})();
 
 /* ──────────── 토큰 사용량 추적 ──────────── */
 var TK_KEY="cj_token_usage_v1";
