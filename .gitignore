@@ -1,5 +1,6 @@
-.firebase/
-firebase-debug.log
-deploy-log.txt
 *.bak*
+.firebase/
 .tmp.driveupload/
+_to_delete/
+deploy-log.txt
+firebase-debug.log
