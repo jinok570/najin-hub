@@ -6694,8 +6694,12 @@ async function doCloudSetup(){
       }
     }
     cloudLS(CLOUD_AT_KEY,null);
+    if(!res && mine===0){
+      syncStatusMsg("⚠️ 이 암호로 된 클라우드 백업이 없고, 이 기기에도 기록이 없어요.<br>다른 기기에서 켰다면 <b>그때 정한 암호</b>와 같은지 확인해주세요.<br>(처음 켜는 거라면 정상 — 그대로 켜졌어요)","err");
+      cloudWatch(); return;
+    }
     closeSyncModal();
-    showBkStatus("✅ 자동 백업이 켜졌어요. 지금 이 기기 기록을 올리고 있어요…","ok");
+    showBkStatus("✅ 자동 백업이 켜졸어요. 지금 이 기기 기록을 올리고 있어요…".replace("켜졸","켜졌"),"ok");
     await cloudPush("setup"); cloudWatch();
     var st=document.getElementById("cloudStatusLine"); if(st) st.innerHTML=cloudStatusHtml();
   }catch(e){ syncStatusMsg("❌ 연결 실패: "+((e&&e.message)||e),"err"); }
